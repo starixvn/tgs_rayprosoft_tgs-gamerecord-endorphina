@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+	<PackageReference Include="StackExchange.Redis" Version="2.6.96" />
+	  <PackageReference Include="System.Linq.Async" Version="6.0.1" />
+	<PackageReference Include="Tgs.GameCommand.Client" Version="0.0.7" />
+	<PackageReference Include="Tgs.GameInterface.EndorphinaService.Client" Version="0.0.7" />
+    <PackageReference Include="Tgs.GameRecord.Endorphina.Session.Client" Version="0.0.1" />
+	<PackageReference Include="Tgs.GameRounds.Schedule.Client" Version="0.0.16" />
+	<PackageReference Include="Tgs.GameRounds.Work.Client" Version="0.0.3" />
+	<PackageReference Include="Tgs.GameRounds.Work.Manual.Client" Version="0.0.1" />
+	<PackageReference Include="Tgs.MessageQueue" Version="2.3.0" />	  
+	<PackageReference Include="Tgs.MessageQueue.Nats" Version="2.3.0" />
+	<PackageReference Include="TGS.ServiceUtility" Version="0.2.0" />
+  </ItemGroup>
+
+</Project>
+
