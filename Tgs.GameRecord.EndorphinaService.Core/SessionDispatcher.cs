@@ -1,7 +1,10 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Google.Protobuf;
+using Microsoft.Extensions.Logging;
 using Tgs.GameRecord.Endorphina.Session.Client;
 using Tgs.GameRecord.Endorphina.Session.Protos;
-using Tgs.GameRecord.EndorphinaService.Core.ScheduleWorkerServices;
+using Tgs.GameRecord.EndorphinaService.Core.Protos;
+using Tgs.GameRecord.EndorphinaService.Core.WorkerServices;
+using Tgs.MessageQueue;
 using Tgs.ServiceUtility;
 
 namespace Tgs.GameRecord.EndorphinaService.Core;
@@ -9,20 +12,23 @@ namespace Tgs.GameRecord.EndorphinaService.Core;
 internal class SessionDispatcher : ISessionDispatcher
 {
     private readonly ILogger<SessionDispatcher> _logger;
+    private readonly IMessageSender _messageSender;
     private readonly IGameRecordEndorphinaSessionClient _client;
     private readonly ISessionLock _sessionLock;
-    private readonly ICommandService<ScheduleCommand> _scheduleService;
+    private readonly ICommandService<WorkCommand> _workService;
 
     public SessionDispatcher(
         ILogger<SessionDispatcher> logger,
+        IMessageSender messageSender,
         IGameRecordEndorphinaSessionClient client,
         ISessionLock sessionLock,
-        ICommandService<ScheduleCommand> scheduleService)
+        ICommandService<WorkCommand> workService)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _messageSender = messageSender ?? throw new ArgumentNullException(nameof(messageSender));
         _client = client ?? throw new ArgumentNullException(nameof(client));
         _sessionLock = sessionLock ?? throw new ArgumentNullException(nameof(sessionLock));
-        _scheduleService = scheduleService ?? throw new ArgumentNullException(nameof(scheduleService));
+        _workService = workService ?? throw new ArgumentNullException(nameof(workService));
     }
 
     public async ValueTask ExecuteAsync(
@@ -69,27 +75,17 @@ internal class SessionDispatcher : ISessionDispatcher
 
             try
             {
-                await _client
-                    .UpdateSessionProcessingAsync(session.Token, cancellationToken)
-                    .ConfigureAwait(false);
+                var request = new SessionQueuedRequest
+                {
+                    ApiUrl = apiUrl.ToString(),
+                    MerchantId = merchantId,
+                    SecretKey = secretKey,
+                    Token = session.Token,
+                };
 
-                var command = new ScheduleCommand(
-                        ApiUrl: apiUrl,
-                        MerchantId: merchantId,
-                        SecretKey: secretKey,
-                        Session: session);
-
-                _logger.LogInformation("LogOn:{logOn} execute the command:{command}", DateTime.Now.ToString("o"), command);
-
-                await _scheduleService
-                    .ExecuteAsync(
-                        command: command,
-                        cancellationToken: cancellationToken)
-                    .ConfigureAwait(false);
-
-                await _client
-                    .UpdateSessionCompleteAsync(session.Token, cancellationToken)
-                    .ConfigureAwait(false);
+                await _messageSender.PublishAsync(
+                    subject: "gp.gamerecord.session.endor",
+                    data: request.ToByteArray(), cancellationToken).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
