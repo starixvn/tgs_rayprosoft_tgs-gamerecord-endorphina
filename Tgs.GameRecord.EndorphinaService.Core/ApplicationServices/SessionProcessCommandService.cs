@@ -47,8 +47,8 @@ internal class SessionProcessCommandService : ICommandService<SessionProcessComm
                 return;
 
             if (!await _sessionLock
-                .LockAsync(token: command.Token)
-                .ConfigureAwait(false))
+                    .LockAsync(token: command.Token)
+                    .ConfigureAwait(false))
             {
                 _logger.LogWarning("LogOn:{logOn} Message:This game provider Endorphina session has been locked. ({token})",
                     DateTime.Now.ToString("o"),

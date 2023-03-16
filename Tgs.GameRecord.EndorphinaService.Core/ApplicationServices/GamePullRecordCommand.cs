@@ -1,11 +1,9 @@
-﻿using Tgs.GameRecord.Endorphina.Session.Protos;
-
-namespace Tgs.GameRecord.EndorphinaService.Core.ApplicationServices;
-public record GamePullRecordCommand(    
+﻿namespace Tgs.GameRecord.EndorphinaService.Core.ApplicationServices;
+public record GamePullRecordCommand(
     string ExternalRoundId,
     string GameExternalId,
     string PlayerCode,
-    string ExternalCurrency,    
+    string ExternalCurrency,
     DateTimeOffset ExternalCreatedOn,
     DateTimeOffset ExternalClosedOn,
     decimal Bet,
