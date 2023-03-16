@@ -5,7 +5,7 @@ public record GamePullRecordCommand(
     string ExternalRoundId,
     string GameExternalId,
     string PlayerCode,
-    string Currency,    
+    string ExternalCurrency,    
     DateTimeOffset ExternalCreatedOn,
     DateTimeOffset ExternalClosedOn,
     decimal Bet,

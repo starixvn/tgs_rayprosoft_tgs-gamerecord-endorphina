@@ -93,7 +93,7 @@ builder.Services
         })
         .AddHandler<ScheduleMessageHandler>(subject: "gp.gamerecord.schedule.endor", "gp.gamerecord.schedule")
         .AddProcessor<ManualMessageHandler>(subject: "gp.gamerecord.manual.endor", queue: "gp.gamerecord.manual")
-        .AddHandler<SessionQueuedMessageHandler>(subject: "gp.gamerecord.session.endor", "gp.gamerecord.session");
+        .AddHandler<SessionProcessMessageHandler>(subject: "gp.gamerecord.session.endor", "gp.gamerecord.session");
     })
     .ClearAllExchanges()
     .AddNatsGlobPatternExchange("*");

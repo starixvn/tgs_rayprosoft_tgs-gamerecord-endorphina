@@ -1,5 +1,4 @@
-﻿using Google.Protobuf.WellKnownTypes;
-using Microsoft.Extensions.Logging.Abstractions;
+﻿using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 using Tgs.GameInterface.EndorphinaService.Client;
 using Tgs.GameInterface.EndorphinaService.Protos;
@@ -16,6 +15,7 @@ public class SessionProcessServiceUnitTest
     public async Task Normal_Process()
     {
         var fakeLogger = NullLogger<SessionProcessCommandService>.Instance;
+        var fakeGetSessionService = Substitute.For<IGetService<SessionInfoQuery, SessionInfoResult?>>();
         var fakeService = Substitute.For<ICommandService<GamePullRecordCommand>>();
         var fakeClient = Substitute.For<IGameInterfaceEndorphinaClient>();
         var fakeSessionClient = Substitute.For<IGameRecordEndorphinaSessionClient>();
@@ -26,21 +26,19 @@ public class SessionProcessServiceUnitTest
         var secretKey = "testSecretKey";
         var token = "AA8BB60F5A134264BE838CF6EBA7C8F1";
 
-        var sessionReply = new GameSessionInfoReply()
-        {
-            Id = "AA8BB60F5A134264BE838CF6EBA7C8F1",
-            Created = new DateTimeOffset(2023, 02, 21, 07, 14, 46, TimeSpan.Zero).ToTimestamp(),
-            Closed = new DateTimeOffset(2023, 02, 21, 07, 19, 37, TimeSpan.Zero).ToTimestamp(),
-            Currency = "CNY",
-            AccountType = "CREDIT",
-            GameName = "endorphina_MinotaurDice",
-            Username = "4ucmqplxb029",
-            ErrorsPending = 0
-        };
+        var sessionInfoResult = new SessionInfoResult
+        (
+            PlayerCode: "4ucmqplxb029",
+            ExternalCurrency: "CNY",
+            ExternalRoundId: "AA8BB60F5A134264BE838CF6EBA7C8F1",
+            GameExternalId: "endorphina_MinotaurDice",
+            ExternalCreatedOn: new DateTimeOffset(2023, 02, 21, 07, 14, 46, TimeSpan.Zero),
+            ExternalClosedOn: new DateTimeOffset(2023, 02, 21, 07, 19, 37, TimeSpan.Zero)
+        );
 
-        _ = fakeClient
-            .GameSessionInfoAsync(apiUrl, merchantId, secretKey, token)
-            .Returns(sessionReply);
+        _ = fakeGetSessionService
+            .GetAsync(new SessionInfoQuery(apiUrl, merchantId, secretKey, token))
+            .Returns(sessionInfoResult);
 
         _ = fakeSessionLock
             .LockAsync(token)
@@ -64,6 +62,7 @@ public class SessionProcessServiceUnitTest
 
         var sut = new SessionProcessCommandService(
             fakeLogger,
+            fakeGetSessionService,
             fakeClient,
             fakeSessionClient,
             fakeSessionLock,

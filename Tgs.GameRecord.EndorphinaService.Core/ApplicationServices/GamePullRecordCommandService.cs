@@ -99,7 +99,7 @@ internal class GamePullRecordCommandService : ICommandService<GamePullRecordComm
                 command.ExternalRoundId,
                 Username = command.PlayerCode,
                 GameName = command.GameExternalId,
-                command.Currency,
+                command.ExternalCurrency,
                 command.Games,
                 BetAmount = command.Bet,
                 WinAmount = command.Win,

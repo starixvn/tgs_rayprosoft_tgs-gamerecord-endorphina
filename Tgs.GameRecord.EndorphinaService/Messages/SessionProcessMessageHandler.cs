@@ -7,14 +7,14 @@ using Tgs.ServiceUtility;
 
 namespace Tgs.GameRecord.EndorphinaService.Messages;
 
-internal class SessionQueuedMessageHandler : IMessageHandler
+internal class SessionProcessMessageHandler : IMessageHandler
 {
     private readonly ICommandService<SessionProcessCommand> _service;
-    private readonly ILogger<SessionQueuedMessageHandler> _logger;
+    private readonly ILogger<SessionProcessMessageHandler> _logger;
 
-    public SessionQueuedMessageHandler(
+    public SessionProcessMessageHandler(
         ICommandService<SessionProcessCommand> service,
-        ILogger<SessionQueuedMessageHandler> logger)
+        ILogger<SessionProcessMessageHandler> logger)
     {
         _service = service ?? throw new ArgumentNullException(nameof(service));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
