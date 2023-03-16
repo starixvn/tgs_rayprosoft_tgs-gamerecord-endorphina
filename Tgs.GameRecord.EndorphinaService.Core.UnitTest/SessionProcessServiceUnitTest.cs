@@ -15,7 +15,7 @@ public class SessionProcessServiceUnitTest
     [TestMethod]
     public async Task Normal_Process()
     {
-        var fakeLogger = NullLogger<SessionProcessService>.Instance;
+        var fakeLogger = NullLogger<SessionProcessCommandService>.Instance;
         var fakeService = Substitute.For<ICommandService<GamePullRecordCommand>>();
         var fakeClient = Substitute.For<IGameInterfaceEndorphinaClient>();
         var fakeSessionClient = Substitute.For<IGameRecordEndorphinaSessionClient>();
@@ -62,7 +62,7 @@ public class SessionProcessServiceUnitTest
             .GameSessionStatisticsAsync(apiUrl, merchantId, secretKey, token)
             .Returns(statisticsReply);
 
-        var sut = new SessionProcessService(
+        var sut = new SessionProcessCommandService(
             fakeLogger,
             fakeClient,
             fakeSessionClient,

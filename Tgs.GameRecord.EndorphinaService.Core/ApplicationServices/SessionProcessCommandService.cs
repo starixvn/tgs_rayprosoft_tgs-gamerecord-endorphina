@@ -5,16 +5,16 @@ using Tgs.ServiceUtility;
 
 namespace Tgs.GameRecord.EndorphinaService.Core.ApplicationServices;
 
-internal class SessionProcessService : ICommandService<SessionProcessCommand>
+internal class SessionProcessCommandService : ICommandService<SessionProcessCommand>
 {
-    private readonly ILogger<SessionProcessService> _logger;
+    private readonly ILogger<SessionProcessCommandService> _logger;
     private readonly IGameInterfaceEndorphinaClient _client;
     private readonly IGameRecordEndorphinaSessionClient _sessionClient;
     private readonly ISessionLock _sessionLock;
     private readonly ICommandService<GamePullRecordCommand> _service;
 
-    public SessionProcessService(
-        ILogger<SessionProcessService> logger,
+    public SessionProcessCommandService(
+        ILogger<SessionProcessCommandService> logger,
         IGameInterfaceEndorphinaClient client,
         IGameRecordEndorphinaSessionClient sessionClient,
         ISessionLock sessionLock,
