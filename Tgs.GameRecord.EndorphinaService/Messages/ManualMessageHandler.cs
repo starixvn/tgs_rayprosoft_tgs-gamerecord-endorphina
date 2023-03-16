@@ -1,6 +1,6 @@
 ﻿using System.Text;
 using System.Text.Json;
-using Tgs.GameRecord.EndorphinaService.Core.WorkerServices;
+using Tgs.GameRecord.EndorphinaService.Core.ApplicationServices;
 using Tgs.MessageQueue;
 using Tgs.ServiceUtility;
 
@@ -9,11 +9,11 @@ namespace Tgs.GameRecord.EndorphinaService.Messages;
 internal class ManualMessageHandler : IMessageProcessor
 {
     private readonly ILogger<ManualMessageHandler> _logger;
-    private readonly ICommandService<WorkCommand> _service;
+    private readonly ICommandService<SessionProcessCommand> _service;
 
     public ManualMessageHandler(
         ILogger<ManualMessageHandler> logger,
-        ICommandService<WorkCommand> service)
+        ICommandService<SessionProcessCommand> service)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _service = service ?? throw new ArgumentNullException(nameof(service));
@@ -27,7 +27,7 @@ internal class ManualMessageHandler : IMessageProcessor
 
         _logger.LogInformation("Information Received:{LogInfo}", request);
 
-        await _service.ExecuteAsync(new WorkCommand(
+        await _service.ExecuteAsync(new SessionProcessCommand(
             ApiUrl: request.ApiUrl,
             MerchantId: request.MerchantId,
             SecretKey: request.SecretKey,

@@ -3,7 +3,7 @@
 option csharp_namespace = "Tgs.GameRecord.EndorphinaService.Core.Protos";
 
 // The request message containing the user's name.
-message SessionQueued{
+message SessionProcess{
     string api_url = 1;
 	string merchant_id = 2;
     string secret_key = 3;

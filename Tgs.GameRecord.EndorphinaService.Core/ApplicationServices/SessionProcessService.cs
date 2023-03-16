@@ -1,31 +1,33 @@
 ﻿using Microsoft.Extensions.Logging;
 using Tgs.GameInterface.EndorphinaService.Client;
 using Tgs.GameRecord.Endorphina.Session.Client;
-using Tgs.GameRecord.EndorphinaService.Core.ApplicationServices;
 using Tgs.ServiceUtility;
 
-namespace Tgs.GameRecord.EndorphinaService.Core.WorkerServices;
+namespace Tgs.GameRecord.EndorphinaService.Core.ApplicationServices;
 
-internal class WorkerService : ICommandService<WorkCommand>
+internal class SessionProcessService : ICommandService<SessionProcessCommand>
 {
-    private readonly ILogger<WorkerService> _logger;
+    private readonly ILogger<SessionProcessService> _logger;
     private readonly IGameInterfaceEndorphinaClient _client;
     private readonly IGameRecordEndorphinaSessionClient _sessionClient;
+    private readonly ISessionLock _sessionLock;
     private readonly ICommandService<GamePullRecordCommand> _service;
 
-    public WorkerService(
-        ILogger<WorkerService> logger,
+    public SessionProcessService(
+        ILogger<SessionProcessService> logger,
         IGameInterfaceEndorphinaClient client,
         IGameRecordEndorphinaSessionClient sessionClient,
+        ISessionLock sessionLock,
         ICommandService<GamePullRecordCommand> service)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _client = client ?? throw new ArgumentNullException(nameof(client));
         _sessionClient = sessionClient ?? throw new ArgumentNullException(nameof(sessionClient));
+        _sessionLock = sessionLock ?? throw new ArgumentNullException(nameof(sessionLock));
         _service = service ?? throw new ArgumentNullException(nameof(service));
     }
 
-    public async ValueTask ExecuteAsync(WorkCommand command, CancellationToken cancellationToken = default)
+    public async ValueTask ExecuteAsync(SessionProcessCommand command, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -49,6 +51,20 @@ internal class WorkerService : ICommandService<WorkCommand>
                 _logger.LogInformation("Please contact endorphina support for resolution (Session Id:{token})", command.Token);
                 return;
             }
+
+            if (!await _sessionLock
+                .LockAsync(token: command.Token)
+                .ConfigureAwait(false))
+            {
+                _logger.LogWarning("LogOn:{logOn} Message:This game provider Endorphina session has been locked. ({token})",
+                    DateTime.Now.ToString("o"),
+                    command.Token);
+                return;
+            }
+
+            await _sessionClient
+                .UpdateSessionProcessingAsync(command.Token, cancellationToken)
+                .ConfigureAwait(false);
 
             var sessionStatistics = await _client
                 .GameSessionStatisticsAsync(
@@ -75,11 +91,24 @@ internal class WorkerService : ICommandService<WorkCommand>
             await _service
                 .ExecuteAsync(recordCommand, cancellationToken)
                 .ConfigureAwait(false);
+
+            await _sessionClient
+                .UpdateSessionCompleteAsync(command.Token, cancellationToken)
+                .ConfigureAwait(false);
         }
         catch (Exception ex)
         {
-            await _sessionClient.UpdateSessionRetryAsync(command.Token, cancellationToken).ConfigureAwait(false);
-            _logger.LogError(ex, "Session({token})處理發生例外", command.Token);
+            await _sessionClient
+                .UpdateSessionRetryAsync(command.Token, cancellationToken)
+                .ConfigureAwait(false);
+
+            _logger.LogError(ex, "Session Process({token})處理發生例外", command.Token);
+        }
+        finally
+        {
+            _ = await _sessionLock
+                .UnlockAsync(token: command.Token)
+                .ConfigureAwait(false);
         }
     }
 }

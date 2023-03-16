@@ -23,7 +23,7 @@ internal class SessionQueuedMessageHandler : IMessageHandler
     public async ValueTask HandleAsync(ReadOnlyMemory<byte> data, CancellationToken cancellationToken = default)
     {
         var json = Encoding.UTF8.GetString(data.Span);
-        var message = JsonSerializer.Deserialize<SessionQueued>(json);
+        var message = JsonSerializer.Deserialize<SessionProcess>(json);
 
         if (message == null)
         {
@@ -33,12 +33,14 @@ internal class SessionQueuedMessageHandler : IMessageHandler
 
         _logger.LogInformation("Information Received:{LogInfo}", message);
 
+        var command = new SessionProcessCommand(
+            ApiUrl: new Uri(message.ApiUrl),
+            MerchantId: message.MerchantId,
+            SecretKey: message.SecretKey,
+            Token: message.Token);
+
         await _service
-            .ExecuteAsync(new SessionProcessCommand(
-                ApiUrl: new Uri(message.ApiUrl),
-                MerchantId: message.MerchantId,
-                SecretKey: message.SecretKey,
-                Token: message.Token), cancellationToken)
+            .ExecuteAsync(command, cancellationToken)
             .ConfigureAwait(false);
     }
 }
