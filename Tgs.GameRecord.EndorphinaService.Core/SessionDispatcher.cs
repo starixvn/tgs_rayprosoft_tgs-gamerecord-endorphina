@@ -60,6 +60,8 @@ internal class SessionDispatcher : ISessionDispatcher
                 await _client
                     .MoveFailedAsync(session.Token, cancellationToken)
                     .ConfigureAwait(false);
+
+                _logger.LogWarning("Move Failed session {token}", session.Token);
                 continue;
             }
 
