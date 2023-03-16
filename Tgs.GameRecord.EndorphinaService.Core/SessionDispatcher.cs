@@ -77,7 +77,7 @@ internal class SessionDispatcher : ISessionDispatcher
 
             try
             {
-                var request = new SessionQueuedRequest
+                var request = new SessionQueued
                 {
                     ApiUrl = apiUrl.ToString(),
                     MerchantId = merchantId,

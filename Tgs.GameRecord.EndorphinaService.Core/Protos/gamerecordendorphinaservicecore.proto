@@ -1,29 +1,11 @@
 ﻿syntax = "proto3";
 
-//import "google/protobuf/timestamp.proto";
-//import "Tgs.GameRecord.EndorphinaService.Core.Protos";
-
 option csharp_namespace = "Tgs.GameRecord.EndorphinaService.Core.Protos";
 
 // The request message containing the user's name.
-message SessionQueuedRequest{
+message SessionQueued{
     string api_url = 1;
 	string merchant_id = 2;
     string secret_key = 3;
-	string token = 4;
-	//Session session = 4;
+	string token = 4;	
 }
-
-//message Session {
-	//TokenState state = 2;
-	//string brand_code = 3;
-	//string player_code = 4;
-    //int32 retry = 5;
-//}
-
-//enum TokenState{
-	//TOKEN_STATE_QUEUED = 0;
-	//TOKEN_STATE_PROCESSING = 1;
-	//TOKEN_STATE_COMPLETE = 2;
-	//TOKEN_STATE_FAILED = 3;
-//}

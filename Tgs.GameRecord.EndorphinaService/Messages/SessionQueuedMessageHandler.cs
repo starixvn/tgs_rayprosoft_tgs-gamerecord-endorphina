@@ -1,7 +1,7 @@
 ﻿using System.Text;
 using System.Text.Json;
-using Tgs.GameRecord.Endorphina.Session.Client;
-using Tgs.GameRecord.EndorphinaService.Core.WorkerServices;
+using Tgs.GameRecord.EndorphinaService.Core.ApplicationServices;
+using Tgs.GameRecord.EndorphinaService.Core.Protos;
 using Tgs.MessageQueue;
 using Tgs.ServiceUtility;
 
@@ -9,54 +9,36 @@ namespace Tgs.GameRecord.EndorphinaService.Messages;
 
 internal class SessionQueuedMessageHandler : IMessageHandler
 {
-    private readonly ICommandService<WorkCommand> _scheduleService;
+    private readonly ICommandService<SessionProcessCommand> _service;
     private readonly ILogger<SessionQueuedMessageHandler> _logger;
-    private readonly IGameRecordEndorphinaSessionClient _client;
 
     public SessionQueuedMessageHandler(
-        ICommandService<WorkCommand> scheduleService,
-        ILogger<SessionQueuedMessageHandler> logger,
-        IGameRecordEndorphinaSessionClient client)
+        ICommandService<SessionProcessCommand> service,
+        ILogger<SessionQueuedMessageHandler> logger)
     {
-        _scheduleService = scheduleService ?? throw new ArgumentNullException(nameof(scheduleService));
+        _service = service ?? throw new ArgumentNullException(nameof(service));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _client = client ?? throw new ArgumentNullException(nameof(client));
     }
 
     public async ValueTask HandleAsync(ReadOnlyMemory<byte> data, CancellationToken cancellationToken = default)
     {
         var json = Encoding.UTF8.GetString(data.Span);
+        var message = JsonSerializer.Deserialize<SessionQueued>(json);
 
-        var messageModel = JsonSerializer.Deserialize<SessionQueuedMessageModel>(json);
-
-        if (messageModel == null)
+        if (message == null)
         {
-            _logger.LogError("Information Received:{LogInfo}", messageModel);
+            _logger.LogError("Information Received:{LogInfo}", message);
             return;
         }
 
-        _logger.LogInformation("Information Received:{LogInfo}", messageModel);
+        _logger.LogInformation("Information Received:{LogInfo}", message);
 
-        await _client
-                    .UpdateSessionProcessingAsync(messageModel.Token, cancellationToken)
-                    .ConfigureAwait(false);
-
-        var command = new WorkCommand(
-                ApiUrl: messageModel.ApiUrl,
-                MerchantId: messageModel.MerchantId,
-                SecretKey: messageModel.SecretKey,
-                Token: messageModel.Token);
-
-        _logger.LogInformation("LogOn:{logOn} execute the command:{command}", DateTime.Now.ToString("o"), command);
-
-        await _scheduleService
-            .ExecuteAsync(
-                command: command,
-                cancellationToken: cancellationToken)
-            .ConfigureAwait(false);
-
-        await _client
-            .UpdateSessionCompleteAsync(messageModel.Token, cancellationToken)
+        await _service
+            .ExecuteAsync(new SessionProcessCommand(
+                ApiUrl: new Uri(message.ApiUrl),
+                MerchantId: message.MerchantId,
+                SecretKey: message.SecretKey,
+                Token: message.Token), cancellationToken)
             .ConfigureAwait(false);
     }
 }
