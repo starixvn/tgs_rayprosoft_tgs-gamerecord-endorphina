@@ -5,16 +5,16 @@ using Tgs.ServiceUtility;
 
 namespace Tgs.GameRecord.EndorphinaService.Core.ApplicationServices;
 
-internal class SessionProcessCommandService : ICommandService<SessionProcessCommand>
+internal class ScheduleSessionProcessCommandService : ICommandService<ScheduleSessionProcessCommand>
 {
-    private readonly ILogger<SessionProcessCommandService> _logger;
+    private readonly ILogger<ScheduleSessionProcessCommandService> _logger;
     private readonly IGameInterfaceEndorphinaClient _client;
     private readonly IGameRecordEndorphinaSessionClient _sessionClient;
     private readonly ISessionLock _sessionLock;
     private readonly ICommandService<GamePullRecordCommand> _service;
 
-    public SessionProcessCommandService(
-        ILogger<SessionProcessCommandService> logger,
+    public ScheduleSessionProcessCommandService(
+        ILogger<ScheduleSessionProcessCommandService> logger,
         IGameInterfaceEndorphinaClient client,
         IGameRecordEndorphinaSessionClient sessionClient,
         ISessionLock sessionLock,
@@ -27,7 +27,7 @@ internal class SessionProcessCommandService : ICommandService<SessionProcessComm
         _service = service ?? throw new ArgumentNullException(nameof(service));
     }
 
-    public async ValueTask ExecuteAsync(SessionProcessCommand command, CancellationToken cancellationToken = default)
+    public async ValueTask ExecuteAsync(ScheduleSessionProcessCommand command, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -39,7 +39,7 @@ internal class SessionProcessCommandService : ICommandService<SessionProcessComm
                     DateTime.Now.ToString("o"),
                     command.Token);
                 return;
-            }           
+            }
 
             var sessionInfo = await _client
                 .GameSessionInfoAsync(
@@ -92,7 +92,7 @@ internal class SessionProcessCommandService : ICommandService<SessionProcessComm
                 .UpdateSessionRetryAsync(command.Token, cancellationToken)
                 .ConfigureAwait(false);
 
-            _logger.LogError(ex, "Session Process({token})處理發生例外", command.Token);
+            _logger.LogError(ex, "Schedule Session Process({token})處理發生例外", command.Token);
         }
         finally
         {

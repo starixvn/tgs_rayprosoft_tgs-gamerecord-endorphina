@@ -7,11 +7,11 @@ namespace Tgs.GameRecord.EndorphinaService.Messages;
 
 internal class SessionProcessMessageHandler : IMessageHandler
 {
-    private readonly ICommandService<SessionProcessCommand> _service;
+    private readonly ICommandService<ScheduleSessionProcessCommand> _service;
     private readonly ILogger<SessionProcessMessageHandler> _logger;
 
     public SessionProcessMessageHandler(
-        ICommandService<SessionProcessCommand> service,
+        ICommandService<ScheduleSessionProcessCommand> service,
         ILogger<SessionProcessMessageHandler> logger)
     {
         _service = service ?? throw new ArgumentNullException(nameof(service));
@@ -23,9 +23,9 @@ internal class SessionProcessMessageHandler : IMessageHandler
         var message = SessionProcess.Parser.ParseFrom(data.Span)
             ?? throw new ArgumentException("參數錯誤");
 
-        _logger.LogInformation("SessionProcess Information Received:{LogInfo}", message);
+        _logger.LogInformation("Session Process Information Received:{LogInfo}", message);
 
-        var command = new SessionProcessCommand(
+        var command = new ScheduleSessionProcessCommand(
             ApiUrl: new Uri(message.ApiUrl),
             MerchantId: message.MerchantId,
             SecretKey: message.SecretKey,

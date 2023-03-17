@@ -3,23 +3,20 @@ using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 using Tgs.GameInterface.EndorphinaService.Client;
 using Tgs.GameInterface.EndorphinaService.Protos;
-using Tgs.GameRecord.Endorphina.Session.Client;
 using Tgs.GameRecord.EndorphinaService.Core.ApplicationServices;
 using Tgs.ServiceUtility;
 
 namespace Tgs.GameRecord.EndorphinaService.Core.UnitTest;
 
 [TestClass]
-public class SessionProcessCommandServiceUnitTest
+public class ManualSessionProcessCommandServiceUnitTest
 {
     [TestMethod]
     public async Task Normal_Process()
     {
-        var fakeLogger = NullLogger<SessionProcessCommandService>.Instance;
-        //var fakeGetSessionService = Substitute.For<IGetService<SessionInfoQuery, SessionInfoResult?>>();
+        var fakeLogger = NullLogger<ManualSessionProcessCommandService>.Instance;
         var fakeService = Substitute.For<ICommandService<GamePullRecordCommand>>();
         var fakeClient = Substitute.For<IGameInterfaceEndorphinaClient>();
-        var fakeSessionClient = Substitute.For<IGameRecordEndorphinaSessionClient>();
         var fakeSessionLock = Substitute.For<ISessionLock>();
 
         var apiUrl = new Uri("http://localhost/");
@@ -63,9 +60,9 @@ public class SessionProcessCommandServiceUnitTest
             .GameSessionStatisticsAsync(apiUrl, merchantId, secretKey, token)
             .Returns(statistcsReply);
 
-        var sut = new SessionProcessCommandService(fakeLogger, fakeClient, fakeSessionClient, fakeSessionLock, fakeService);
+        var sut = new ManualSessionProcessCommandService(fakeLogger, fakeClient, fakeSessionLock, fakeService);
 
-        var command = new SessionProcessCommand(apiUrl, merchantId, secretKey, token);
+        var command = new ManualSessionProcessCommand(apiUrl, merchantId, secretKey, token);
         {
         };
 
@@ -75,10 +72,6 @@ public class SessionProcessCommandServiceUnitTest
             .Received(1)
             .ExecuteAsync(Arg.Any<GamePullRecordCommand>());
 
-        _ = fakeSessionClient
-            .Received(1)
-            .UpdateSessionCompleteAsync(token);
-
         _ = fakeSessionLock.Received(1)
             .UnlockAsync(token);
     }
@@ -86,11 +79,9 @@ public class SessionProcessCommandServiceUnitTest
     [TestMethod]
     public void SessionInfo為Null()
     {
-        var fakeLogger = NullLogger<SessionProcessCommandService>.Instance;
-        //var fakeGetSessionService = Substitute.For<IGetService<SessionInfoQuery, SessionInfoResult?>>();
+        var fakeLogger = NullLogger<ManualSessionProcessCommandService>.Instance;
         var fakeService = Substitute.For<ICommandService<GamePullRecordCommand>>();
         var fakeClient = Substitute.For<IGameInterfaceEndorphinaClient>();
-        var fakeSessionClient = Substitute.For<IGameRecordEndorphinaSessionClient>();
         var fakeSessionLock = Substitute.For<ISessionLock>();
 
         var apiUrl = new Uri("http://localhost/");
@@ -100,11 +91,11 @@ public class SessionProcessCommandServiceUnitTest
 
         _ = fakeSessionLock
             .LockAsync(token)
-            .Returns(true);        
+            .Returns(true);
 
-        var sut = new SessionProcessCommandService(fakeLogger, fakeClient, fakeSessionClient, fakeSessionLock, fakeService);
+        var sut = new ManualSessionProcessCommandService(fakeLogger, fakeClient, fakeSessionLock, fakeService);
 
-        var command = new SessionProcessCommand(apiUrl, merchantId, secretKey, token);
+        var command = new ManualSessionProcessCommand(apiUrl, merchantId, secretKey, token);
 
         _ = Assert.ThrowsExceptionAsync<ArgumentException>(async () => await sut.ExecuteAsync(command).ConfigureAwait(false));
     }
@@ -112,11 +103,9 @@ public class SessionProcessCommandServiceUnitTest
     [TestMethod]
     public void SessionStatistics為Null()
     {
-        var fakeLogger = NullLogger<SessionProcessCommandService>.Instance;
-        //var fakeGetSessionService = Substitute.For<IGetService<SessionInfoQuery, SessionInfoResult?>>();
+        var fakeLogger = NullLogger<ManualSessionProcessCommandService>.Instance;
         var fakeService = Substitute.For<ICommandService<GamePullRecordCommand>>();
         var fakeClient = Substitute.For<IGameInterfaceEndorphinaClient>();
-        var fakeSessionClient = Substitute.For<IGameRecordEndorphinaSessionClient>();
         var fakeSessionLock = Substitute.For<ISessionLock>();
 
         var apiUrl = new Uri("http://localhost/");
@@ -144,9 +133,9 @@ public class SessionProcessCommandServiceUnitTest
             .GameSessionInfoAsync(apiUrl, merchantId, secretKey, token)
             .Returns(sessionInfoReply);
 
-        var sut = new SessionProcessCommandService(fakeLogger, fakeClient, fakeSessionClient, fakeSessionLock, fakeService);
+        var sut = new ManualSessionProcessCommandService(fakeLogger, fakeClient, fakeSessionLock, fakeService);
 
-        var command = new SessionProcessCommand(apiUrl, merchantId, secretKey, token);
+        var command = new ManualSessionProcessCommand(apiUrl, merchantId, secretKey, token);
 
         _ = Assert.ThrowsExceptionAsync<ArgumentException>(async () => await sut.ExecuteAsync(command).ConfigureAwait(false));
     }
@@ -154,11 +143,9 @@ public class SessionProcessCommandServiceUnitTest
     [TestMethod]
     public async Task SessionLock為False不繼續執行()
     {
-        var fakeLogger = NullLogger<SessionProcessCommandService>.Instance;
-        //var fakeGetSessionService = Substitute.For<IGetService<SessionInfoQuery, SessionInfoResult?>>();
+        var fakeLogger = NullLogger<ManualSessionProcessCommandService>.Instance;
         var fakeService = Substitute.For<ICommandService<GamePullRecordCommand>>();
         var fakeClient = Substitute.For<IGameInterfaceEndorphinaClient>();
-        var fakeSessionClient = Substitute.For<IGameRecordEndorphinaSessionClient>();
         var fakeSessionLock = Substitute.For<ISessionLock>();
 
         var apiUrl = new Uri("http://localhost/");
@@ -170,14 +157,13 @@ public class SessionProcessCommandServiceUnitTest
             .LockAsync(token)
             .Returns(false);
 
-        var sut = new SessionProcessCommandService(
+        var sut = new ManualSessionProcessCommandService(
             fakeLogger,
             fakeClient,
-            fakeSessionClient,
             fakeSessionLock,
             fakeService);
 
-        var command = new SessionProcessCommand(
+        var command = new ManualSessionProcessCommand(
             ApiUrl: apiUrl,
             MerchantId: merchantId,
             SecretKey: secretKey,
@@ -185,8 +171,8 @@ public class SessionProcessCommandServiceUnitTest
 
         await sut.ExecuteAsync(command).ConfigureAwait(false);
 
-        _ = fakeSessionClient
-           .Received(0)
-           .UpdateSessionProcessingAsync(token);
+        _ = fakeService
+            .Received(0)
+            .ExecuteAsync(Arg.Any<GamePullRecordCommand>());
     }
 }

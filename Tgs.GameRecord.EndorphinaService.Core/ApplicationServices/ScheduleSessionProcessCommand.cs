@@ -1,5 +1,5 @@
 ﻿namespace Tgs.GameRecord.EndorphinaService.Core.ApplicationServices;
-public record SessionProcessCommand(
+public record ScheduleSessionProcessCommand(
     Uri ApiUrl,
     string MerchantId,
     string SecretKey,
