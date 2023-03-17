@@ -85,7 +85,7 @@ public class ScheduleSessionProcessCommandServiceUnitTest
     [TestMethod]
     public void SessionInfo為Null()
     {
-        var fakeLogger = NullLogger<ScheduleSessionProcessCommandService>.Instance;        
+        var fakeLogger = NullLogger<ScheduleSessionProcessCommandService>.Instance;
         var fakeService = Substitute.For<ICommandService<GamePullRecordCommand>>();
         var fakeClient = Substitute.For<IGameInterfaceEndorphinaClient>();
         var fakeSessionClient = Substitute.For<IGameRecordEndorphinaSessionClient>();
@@ -110,7 +110,7 @@ public class ScheduleSessionProcessCommandServiceUnitTest
     [TestMethod]
     public void SessionStatistics為Null()
     {
-        var fakeLogger = NullLogger<ScheduleSessionProcessCommandService>.Instance;        
+        var fakeLogger = NullLogger<ScheduleSessionProcessCommandService>.Instance;
         var fakeService = Substitute.For<ICommandService<GamePullRecordCommand>>();
         var fakeClient = Substitute.For<IGameInterfaceEndorphinaClient>();
         var fakeSessionClient = Substitute.For<IGameRecordEndorphinaSessionClient>();
@@ -151,7 +151,7 @@ public class ScheduleSessionProcessCommandServiceUnitTest
     [TestMethod]
     public async Task SessionLock為False不繼續執行()
     {
-        var fakeLogger = NullLogger<ScheduleSessionProcessCommandService>.Instance;        
+        var fakeLogger = NullLogger<ScheduleSessionProcessCommandService>.Instance;
         var fakeService = Substitute.For<ICommandService<GamePullRecordCommand>>();
         var fakeClient = Substitute.For<IGameInterfaceEndorphinaClient>();
         var fakeSessionClient = Substitute.For<IGameRecordEndorphinaSessionClient>();
