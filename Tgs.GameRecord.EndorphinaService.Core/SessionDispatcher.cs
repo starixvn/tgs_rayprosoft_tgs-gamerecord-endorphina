@@ -67,7 +67,7 @@ internal class SessionDispatcher : ISessionDispatcher
             };
 
             await _messageSender
-                .PublishAsync(subject: "gp.gamerecord.session.endor", request.ToByteArray(), cancellationToken)
+                .PublishAsync(subject: "gp.gamerecord.endor.session.queued", request.ToByteArray(), cancellationToken)
                 .ConfigureAwait(false);
         }
     }

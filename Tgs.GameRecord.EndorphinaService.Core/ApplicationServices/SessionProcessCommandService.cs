@@ -8,7 +8,6 @@ namespace Tgs.GameRecord.EndorphinaService.Core.ApplicationServices;
 internal class SessionProcessCommandService : ICommandService<SessionProcessCommand>
 {
     private readonly ILogger<SessionProcessCommandService> _logger;
-    private readonly IGetService<SessionInfoQuery, SessionInfoResult?> _getService;
     private readonly IGameInterfaceEndorphinaClient _client;
     private readonly IGameRecordEndorphinaSessionClient _sessionClient;
     private readonly ISessionLock _sessionLock;
@@ -16,14 +15,12 @@ internal class SessionProcessCommandService : ICommandService<SessionProcessComm
 
     public SessionProcessCommandService(
         ILogger<SessionProcessCommandService> logger,
-        IGetService<SessionInfoQuery, SessionInfoResult?> getService,
         IGameInterfaceEndorphinaClient client,
         IGameRecordEndorphinaSessionClient sessionClient,
         ISessionLock sessionLock,
         ICommandService<GamePullRecordCommand> service)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _getService = getService ?? throw new ArgumentNullException(nameof(getService));
         _client = client ?? throw new ArgumentNullException(nameof(client));
         _sessionClient = sessionClient ?? throw new ArgumentNullException(nameof(sessionClient));
         _sessionLock = sessionLock ?? throw new ArgumentNullException(nameof(sessionLock));
@@ -34,18 +31,6 @@ internal class SessionProcessCommandService : ICommandService<SessionProcessComm
     {
         try
         {
-            var sessionInfo = await _getService
-                .GetAsync(new SessionInfoQuery(
-                    command.ApiUrl,
-                    command.MerchantId,
-                    command.SecretKey,
-                    command.Token),
-                    cancellationToken)
-                .ConfigureAwait(false);
-
-            if (sessionInfo is null)
-                return;
-
             if (!await _sessionLock
                     .LockAsync(token: command.Token)
                     .ConfigureAwait(false))
@@ -54,11 +39,17 @@ internal class SessionProcessCommandService : ICommandService<SessionProcessComm
                     DateTime.Now.ToString("o"),
                     command.Token);
                 return;
-            }
+            }           
 
-            await _sessionClient
-                .UpdateSessionProcessingAsync(command.Token, cancellationToken)
-                .ConfigureAwait(false);
+            var sessionInfo = await _client
+                .GameSessionInfoAsync(
+                    command.ApiUrl,
+                    command.MerchantId,
+                    command.SecretKey,
+                    command.Token,
+                    cancellationToken)
+                .ConfigureAwait(continueOnCapturedContext: false)
+                ?? throw new ArgumentException("sessionInfo");
 
             var sessionStatistics = await _client
                 .GameSessionStatisticsAsync(
@@ -67,15 +58,20 @@ internal class SessionProcessCommandService : ICommandService<SessionProcessComm
                     command.SecretKey,
                     command.Token,
                     cancellationToken)
-                .ConfigureAwait(false);
+                .ConfigureAwait(false)
+                ?? throw new ArgumentException("sessionStatistics");
+
+            await _sessionClient
+               .UpdateSessionProcessingAsync(command.Token, cancellationToken)
+               .ConfigureAwait(false);
 
             var recordCommand = new GamePullRecordCommand(
-                ExternalRoundId: sessionInfo.ExternalRoundId,
-                GameExternalId: sessionInfo.GameExternalId,
-                PlayerCode: sessionInfo.PlayerCode,
-                ExternalCurrency: sessionInfo.ExternalCurrency,
-                ExternalCreatedOn: sessionInfo.ExternalCreatedOn,
-                ExternalClosedOn: sessionInfo.ExternalClosedOn,
+                ExternalRoundId: sessionInfo.Id,
+                GameExternalId: sessionInfo.GameName,
+                PlayerCode: sessionInfo.Username,
+                ExternalCurrency: sessionInfo.Currency,
+                ExternalCreatedOn: sessionInfo.Created.ToDateTimeOffset(),
+                ExternalClosedOn: sessionInfo.Closed.ToDateTimeOffset(),
                 Bet: sessionStatistics.Bet.ToDecimal().GetValueOrDefault(0.0m),
                 Win: sessionStatistics.Win.ToDecimal().GetValueOrDefault(0.0m),
                 Games: sessionStatistics.Games,
