@@ -30,7 +30,7 @@ internal class SessionDispatcher : ISessionDispatcher
         CancellationToken cancellationToken = default)
     {
         var sessions = await _client
-            .QuerySessionsAsync(TokenState.Queued, cancellationToken)
+            .QuerySessionsAsync(TokenState.Queued, merchantId, cancellationToken)
             .ToArrayAsync(cancellationToken)
             .ConfigureAwait(false);
 

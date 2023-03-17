@@ -10,7 +10,19 @@ namespace Tgs.GameRecord.EndorphinaService.Controllers;
 [ApiController]
 public class SessionController : ControllerBase
 {
-    [HttpPost("SessionProcess")]
+    /// <summary>
+    /// Sessions the process asynchronous.
+    /// </summary>
+    /// <param name="sender">The sender.</param>
+    /// <param name="source">The source.</param>
+    /// <returns></returns>
+    /// {
+//  "apiUrl": "string",
+//  "merchantId": "string",
+//  "secretKey": "string",
+//  "token": "string"
+//}
+[HttpPost("SessionProcess")]
     public async ValueTask SessionProcessAsync(
         [FromServices] IMessageSender sender,
         SessionProcessQueryViewModel source)
