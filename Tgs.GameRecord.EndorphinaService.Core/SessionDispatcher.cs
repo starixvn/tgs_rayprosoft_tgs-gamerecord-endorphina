@@ -48,7 +48,7 @@ internal class SessionDispatcher : ISessionDispatcher
 
         foreach (var session in sessions)
         {
-            if (session.Retry == 3)
+            if (session.Retry >= 3)
             {
                 await _client
                     .MoveFailedAsync(session.Token, cancellationToken)

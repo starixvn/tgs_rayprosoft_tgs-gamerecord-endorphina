@@ -41,6 +41,10 @@ internal class ScheduleSessionProcessCommandService : ICommandService<ScheduleSe
                 return;
             }
 
+            await _sessionClient
+               .UpdateSessionProcessingAsync(command.Token, cancellationToken)
+               .ConfigureAwait(false);
+
             var sessionInfo = await _client
                 .GameSessionInfoAsync(
                     command.ApiUrl,
@@ -60,10 +64,6 @@ internal class ScheduleSessionProcessCommandService : ICommandService<ScheduleSe
                     cancellationToken)
                 .ConfigureAwait(false)
                 ?? throw new ArgumentException("sessionStatistics");
-
-            await _sessionClient
-               .UpdateSessionProcessingAsync(command.Token, cancellationToken)
-               .ConfigureAwait(false);
 
             var recordCommand = new GamePullRecordCommand(
                 ExternalRoundId: sessionInfo.Id,
