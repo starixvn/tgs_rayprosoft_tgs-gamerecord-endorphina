@@ -17,7 +17,7 @@
 	<PackageReference Include="Tgs.GameInterface.EndorphinaService.Client" Version="0.0.7" />
     <PackageReference Include="Tgs.GameRecord.Endorphina.Session.Client" Version="0.0.3" />
 	<PackageReference Include="Tgs.GameRounds.Schedule.Client" Version="0.0.17" />
-	<PackageReference Include="Tgs.GameRounds.Work.Client" Version="0.0.3" />
+	<PackageReference Include="Tgs.GameRounds.Work.Client" Version="0.0.4" />
 	<PackageReference Include="Tgs.GameRounds.Work.Manual.Client" Version="0.0.2" />
 	<PackageReference Include="Tgs.MessageQueue" Version="2.3.0" />	  
 	<PackageReference Include="Tgs.MessageQueue.Nats" Version="2.3.0" />
