@@ -1,6 +1,6 @@
 variables:
-  ImageServiceName: pgtgs/game-gamerecord-endor-service
-  SettingServiceKey: game-gamerecord-endor-service
+  ImageServiceName: pgtgs/game-gamerecord-endor
+  SettingServiceKey: game-gamerecord-endor
   HelmTemplateFolderServiceName: game-gamerecord-endor-service
   BuildCacheKey: Tgs.GameRecord.EndorphinaService.$CI_PIPELINE_ID
 
