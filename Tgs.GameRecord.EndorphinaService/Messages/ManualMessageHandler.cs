@@ -1,7 +1,6 @@
 ﻿using System.Text;
 using System.Text.Json;
 using Tgs.GameRecord.EndorphinaService.Core.ApplicationServices;
-using Tgs.GameRecord.EndorphinaService.Core.Protos;
 using Tgs.MessageQueue;
 using Tgs.ServiceUtility;
 
@@ -22,8 +21,8 @@ internal class ManualMessageHandler : IMessageProcessor
 
     public async ValueTask<ReadOnlyMemory<byte>> HandleAsync(ReadOnlyMemory<byte> data, CancellationToken cancellationToken = default)
     {
-        var message = SessionProcess.Parser.ParseFrom(data.Span)
-           ?? throw new ArgumentException("參數錯誤");
+        var json = Encoding.UTF8.GetString(data.Span);
+        var message = JsonSerializer.Deserialize<ManualMessageModel>(json);
 
         if (message == null)
         {
@@ -34,7 +33,7 @@ internal class ManualMessageHandler : IMessageProcessor
         _logger.LogInformation("Information Received:{LogInfo}", message);
 
         await _service.ExecuteAsync(new ManualSessionProcessCommand(
-            ApiUrl: new Uri(message.ApiUrl),
+            ApiUrl: message.ApiUrl,
             MerchantId: message.MerchantId,
             SecretKey: message.SecretKey,
             Token: message.Token), cancellationToken).ConfigureAwait(false);

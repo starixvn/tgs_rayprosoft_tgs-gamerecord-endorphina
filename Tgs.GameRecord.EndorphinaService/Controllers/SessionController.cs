@@ -1,6 +1,8 @@
-﻿using Google.Protobuf;
+﻿using System.Text.Json;
+using Google.Protobuf;
 using Microsoft.AspNetCore.Mvc;
 using Tgs.GameRecord.EndorphinaService.Core.Protos;
+using Tgs.GameRecord.EndorphinaService.Messages;
 using Tgs.GameRecord.EndorphinaService.ViewModels;
 using Tgs.MessageQueue;
 
@@ -46,6 +48,7 @@ public class SessionController : ControllerBase
             cancellationToken: HttpContext.RequestAborted)
         .ConfigureAwait(false);
     }
+
     /// <summary>
     /// Sessions the queued asynchronous.
     /// </summary>
@@ -62,7 +65,7 @@ public class SessionController : ControllerBase
     ///             "secretKey": "9BC9E97FFCD74B16B87BD6FA82C8C2AF",
     ///             "token": "AA8BB60F5A134264BE838CF6EBA7C8F1"
     ///         }
-    /// </remarks>    
+    /// </remarks>
     [HttpPost("SessionQueued")]
     public async ValueTask SessionQueuedAsync(
         [FromServices] IMessageSender sender,
@@ -82,6 +85,7 @@ public class SessionController : ControllerBase
             cancellationToken: HttpContext.RequestAborted)
         .ConfigureAwait(false);
     }
+
     /// <summary>
     /// Manuals the asynchronous.
     /// </summary>
@@ -98,25 +102,23 @@ public class SessionController : ControllerBase
     ///             "secretKey": "9BC9E97FFCD74B16B87BD6FA82C8C2AF",
     ///             "token": "AA8BB60F5A134264BE838CF6EBA7C8F1"
     ///         }
-    /// </remarks>   
+    /// </remarks>
     [HttpPost("Manual")]
     public async ValueTask ManualAsync(
         [FromServices] IMessageSender sender,
         ManualQueryViewModel source)
     {
-        var request = new SessionProcess()
-        {
-            ApiUrl = source.ApiUrl,
-            MerchantId = source.MerchantId,
-            SecretKey = source.SecretKey,
-            Token = source.Token
-        };
+        var request = new ManualMessageModel(
+            ApiUrl: new Uri(source.ApiUrl),
+            MerchantId: source.MerchantId,
+            SecretKey: source.SecretKey,
+            Token: source.Token
+        );
 
         await sender.PublishAsync(
             subject: "gp.gamerecord.manual.endor",
-            data: request.ToByteArray(),
+            data: JsonSerializer.SerializeToUtf8Bytes(request),
             cancellationToken: HttpContext.RequestAborted)
-        .ConfigureAwait(false);        
+        .ConfigureAwait(false);
     }
-
 }
