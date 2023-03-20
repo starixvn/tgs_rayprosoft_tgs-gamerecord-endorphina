@@ -1,0 +1,44 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.4.33205.214
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tgs.GameRecord.EndorphinaService", "Tgs.GameRecord.EndorphinaService\Tgs.GameRecord.EndorphinaService.csproj", "{7A9725DC-A1B3-4A54-AFD7-C2F950E52F61}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tgs.GameRecord.EndorphinaService.Core", "Tgs.GameRecord.EndorphinaService.Core\Tgs.GameRecord.EndorphinaService.Core.csproj", "{45E06A92-14D8-4EF9-ADE9-8DA9315FBBBE}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{D82F5ABC-851E-4F01-B0A8-7E89CC1B1BC9}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+		CodeMaid.config = CodeMaid.config
+		nuget.config = nuget.config
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tgs.GameRecord.EndorphinaService.Core.UnitTest", "Tgs.GameRecord.EndorphinaService.Core.UnitTest\Tgs.GameRecord.EndorphinaService.Core.UnitTest.csproj", "{7FA9D69A-E25F-48FD-A697-EF7B301030BC}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7A9725DC-A1B3-4A54-AFD7-C2F950E52F61}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7A9725DC-A1B3-4A54-AFD7-C2F950E52F61}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7A9725DC-A1B3-4A54-AFD7-C2F950E52F61}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7A9725DC-A1B3-4A54-AFD7-C2F950E52F61}.Release|Any CPU.Build.0 = Release|Any CPU
+		{45E06A92-14D8-4EF9-ADE9-8DA9315FBBBE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{45E06A92-14D8-4EF9-ADE9-8DA9315FBBBE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{45E06A92-14D8-4EF9-ADE9-8DA9315FBBBE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{45E06A92-14D8-4EF9-ADE9-8DA9315FBBBE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7FA9D69A-E25F-48FD-A697-EF7B301030BC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7FA9D69A-E25F-48FD-A697-EF7B301030BC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7FA9D69A-E25F-48FD-A697-EF7B301030BC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7FA9D69A-E25F-48FD-A697-EF7B301030BC}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {D01C6389-306B-4A0F-ACE2-43E3DBF56BD7}
+	EndGlobalSection
+EndGlobal
