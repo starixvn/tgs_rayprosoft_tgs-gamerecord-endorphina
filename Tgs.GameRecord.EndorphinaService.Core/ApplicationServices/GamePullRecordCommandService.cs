@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System.Text.Json;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Tgs.GameRounds.Work.Client;
 using Tgs.GameRounds.Work.Common.Protos;
@@ -131,7 +132,7 @@ internal class GamePullRecordCommandService : ICommandService<GamePullRecordComm
                     commission: 0,
                     turnover: turnover,
                     playerWinLoss: playerWinLoss,
-                    additionalData: additionalData.ToString() ?? string.Empty,
+                    additionalData: JsonSerializer.Serialize(additionalData,new JsonSerializerOptions() { WriteIndented = true }) ?? string.Empty,
                     cancellationToken: cancellationToken)
                 .ConfigureAwait(false);
             }
