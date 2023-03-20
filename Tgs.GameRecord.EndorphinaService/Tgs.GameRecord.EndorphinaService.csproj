@@ -23,6 +23,11 @@
 		<PackageReference Include="Tgs.Interceptors" Version="0.2.1" />
 	</ItemGroup>
 
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU' or &#xD;&#xA;				   '$(Configuration)|$(Platform)'=='Release|AnyCPU' or&#xD;&#xA;				   '$(Configuration)|$(Platform)'=='dev|AnyCPU' or&#xD;&#xA;				   '$(Configuration)|$(Platform)'=='staging|AnyCPU'or&#xD;&#xA;				   '$(Configuration)|$(Platform)'=='prod|AnyCPU'">
+		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
+		<NoWarn>$(NoWarn);1591;0063</NoWarn>
+	</PropertyGroup>
+
 	<ItemGroup>
     <ProjectReference Include="..\Tgs.GameRecord.EndorphinaService.Core\Tgs.GameRecord.EndorphinaService.Core.csproj" />
   </ItemGroup>

@@ -8,13 +8,25 @@
     }
   },
   "profiles": {
-    "Tgs.GameRecord.EndorphinaService": {
+    "http": {
       "commandName": "Project",
       "launchBrowser": true,
       "launchUrl": "swagger",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "OTEL_SERVICE_NAME": "Game-Gamerecord-ENDOR-Service(local)",
+        "OTEL_SERVICE_NAME": "Game-Gamerecord-Endorphina-Service(local)",
+        "NODE_IP": "otel.rpgp.cc"
+      },
+      "applicationUrl": "http://localhost:5108",
+      "dotnetRunMessages": true
+    },
+    "https": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "launchUrl": "swagger",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "OTEL_SERVICE_NAME": "Game-Gamerecord-Endorphina-Service(local)",
         "NODE_IP": "otel.rpgp.cc"
       },
       "applicationUrl": "https://localhost:7265;http://localhost:5108",
@@ -28,7 +40,7 @@
       "useSSL": true,
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "OTEL_SERVICE_NAME": "Game-Gamerecord-ENDOR-Service(local)",
+        "OTEL_SERVICE_NAME": "Game-Gamerecord-Endorphina-Service(local)",
         "NODE_IP": "otel.rpgp.cc"
       }
     }

@@ -16,13 +16,18 @@ public class SessionController : ControllerBase
     /// <param name="sender">The sender.</param>
     /// <param name="source">The source.</param>
     /// <returns></returns>
-    /// {
-//  "apiUrl": "string",
-//  "merchantId": "string",
-//  "secretKey": "string",
-//  "token": "string"
-//}
-[HttpPost("SessionProcess")]
+    /// <remarks>
+    /// <b>Example</b><br />
+    ///
+    ///     Post
+    ///         {
+    ///             "apiUrl": "https://test.endorphina.network",
+    ///             "merchantId": "1494",
+    ///             "secretKey": "9BC9E97FFCD74B16B87BD6FA82C8C2AF",
+    ///             "token": "AA8BB60F5A134264BE838CF6EBA7C8F1"
+    ///         }
+    /// </remarks>
+    [HttpPost("SessionProcess")]
     public async ValueTask SessionProcessAsync(
         [FromServices] IMessageSender sender,
         SessionProcessQueryViewModel source)
@@ -41,7 +46,23 @@ public class SessionController : ControllerBase
             cancellationToken: HttpContext.RequestAborted)
         .ConfigureAwait(false);
     }
-
+    /// <summary>
+    /// Sessions the queued asynchronous.
+    /// </summary>
+    /// <param name="sender">The sender.</param>
+    /// <param name="source">The source.</param>
+    /// <returns></returns>
+    /// <remarks>
+    /// <b>Example</b><br />
+    ///
+    ///     Post
+    ///         {
+    ///             "apiUrl": "https://test.endorphina.network",
+    ///             "merchantId": "1494",
+    ///             "secretKey": "9BC9E97FFCD74B16B87BD6FA82C8C2AF",
+    ///             "token": "AA8BB60F5A134264BE838CF6EBA7C8F1"
+    ///         }
+    /// </remarks>    
     [HttpPost("SessionQueued")]
     public async ValueTask SessionQueuedAsync(
         [FromServices] IMessageSender sender,
@@ -61,4 +82,41 @@ public class SessionController : ControllerBase
             cancellationToken: HttpContext.RequestAborted)
         .ConfigureAwait(false);
     }
+    /// <summary>
+    /// Manuals the asynchronous.
+    /// </summary>
+    /// <param name="sender">The sender.</param>
+    /// <param name="source">The source.</param>
+    /// <returns></returns>
+    /// <remarks>
+    /// <b>Example</b><br />
+    ///
+    ///     Post
+    ///         {
+    ///             "apiUrl": "https://test.endorphina.network",
+    ///             "merchantId": "1494",
+    ///             "secretKey": "9BC9E97FFCD74B16B87BD6FA82C8C2AF",
+    ///             "token": "AA8BB60F5A134264BE838CF6EBA7C8F1"
+    ///         }
+    /// </remarks>   
+    [HttpPost("Manual")]
+    public async ValueTask ManualAsync(
+        [FromServices] IMessageSender sender,
+        ManualQueryViewModel source)
+    {
+        var request = new SessionProcess()
+        {
+            ApiUrl = source.ApiUrl,
+            MerchantId = source.MerchantId,
+            SecretKey = source.SecretKey,
+            Token = source.Token
+        };
+
+        await sender.PublishAsync(
+            subject: "gp.gamerecord.manual.endor",
+            data: request.ToByteArray(),
+            cancellationToken: HttpContext.RequestAborted)
+        .ConfigureAwait(false);        
+    }
+
 }
