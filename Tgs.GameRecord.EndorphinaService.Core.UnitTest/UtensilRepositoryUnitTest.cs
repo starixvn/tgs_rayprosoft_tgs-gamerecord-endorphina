@@ -15,9 +15,6 @@ public class UtensilRepositoryUnitTest
         var gameRecordInfo = Options.Create(new GameRecordInfoOptions
         {
             GameProviderCode = "ENDOR",
-            IntervalMinutes = 3,
-            IntervalMinutesMax = 60,
-            IntervalMinutesMinimum = 1,
             LockMinute = 1
         });
         var fakeClient = Substitute.For<IGameCommandClient>();
@@ -72,9 +69,6 @@ public class UtensilRepositoryUnitTest
         var gameRecordInfo = Options.Create(new GameRecordInfoOptions
         {
             GameProviderCode = "ENDOR",
-            IntervalMinutes = 3,
-            IntervalMinutesMax = 60,
-            IntervalMinutesMinimum = 1,
             LockMinute = 1
         });
         var fakeClient = Substitute.For<IGameCommandClient>();
@@ -129,9 +123,6 @@ public class UtensilRepositoryUnitTest
         var gameRecordInfo = Options.Create(new GameRecordInfoOptions
         {
             GameProviderCode = "ENDOR",
-            IntervalMinutes = 3,
-            IntervalMinutesMax = 60,
-            IntervalMinutesMinimum = 1,
             LockMinute = 1
         });
         var fakeClient = Substitute.For<IGameCommandClient>();
@@ -181,9 +172,6 @@ public class UtensilRepositoryUnitTest
         var gameRecordInfo = Options.Create(new GameRecordInfoOptions
         {
             GameProviderCode = "ENDOR",
-            IntervalMinutes = 3,
-            IntervalMinutesMax = 60,
-            IntervalMinutesMinimum = 1,
             LockMinute = 1
         });
         var fakeClient = Substitute.For<IGameCommandClient>();
@@ -223,9 +211,6 @@ public class UtensilRepositoryUnitTest
         var gameRecordInfo = Options.Create(new GameRecordInfoOptions
         {
             GameProviderCode = "ENDOR",
-            IntervalMinutes = 3,
-            IntervalMinutesMax = 60,
-            IntervalMinutesMinimum = 1,
             LockMinute = 1
         });
         var fakeClient = Substitute.For<IGameCommandClient>();
