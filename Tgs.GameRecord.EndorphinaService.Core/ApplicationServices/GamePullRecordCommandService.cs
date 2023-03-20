@@ -68,7 +68,7 @@ internal class GamePullRecordCommandService : ICommandService<GamePullRecordComm
                 }
             }
 
-            RoundBiddingStatus status = IsClosed ? RoundBiddingStatus.Closed : RoundBiddingStatus.Open;
+            RoundStatus status = IsClosed ? RoundStatus.Closed : RoundStatus.Open;
 
             var playerWinLoss = 0.0m;
             DateTimeOffset? externalClosedOn = null;
@@ -76,7 +76,7 @@ internal class GamePullRecordCommandService : ICommandService<GamePullRecordComm
             var validBetAmount = 0.0m;
             var settleAmount = 0.0m;
             var turnover = 0.0m;
-            if (status == RoundBiddingStatus.Closed)
+            if (status == RoundStatus.Closed)
             {
                 betAmount = command.Bet;
                 validBetAmount = command.Bet;
@@ -88,11 +88,11 @@ internal class GamePullRecordCommandService : ICommandService<GamePullRecordComm
 
             var clientStatus = IsClosed
                 ? playerWinLoss > 0
-                    ? RoundBiddingClientStatus.Win
+                    ? RoundClientStatus.Win
                     : playerWinLoss == 0
-                        ? RoundBiddingClientStatus.Draw
-                        : RoundBiddingClientStatus.Loss
-                : RoundBiddingClientStatus.Open;
+                        ? RoundClientStatus.Draw
+                        : RoundClientStatus.Loss
+                : RoundClientStatus.Open;
 
             var additionalData = new
             {
