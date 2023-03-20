@@ -14,10 +14,7 @@ data:
           }
       },
       "GameRecordInfo": {
-        "GameProviderCode": "ENDOR",
-        "IntervalMinutes": 3,
-        "IntervalMinutesMax": 60,
-        "IntervalMinutesMinimum": 1,
+        "GameProviderCode": "ENDOR",        
         "LockMinute": 2
       },
       "GameRecord": {
