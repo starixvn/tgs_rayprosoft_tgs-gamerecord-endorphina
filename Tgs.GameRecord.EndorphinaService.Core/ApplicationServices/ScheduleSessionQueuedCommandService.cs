@@ -7,14 +7,14 @@ using Tgs.ServiceUtility;
 
 namespace Tgs.GameRecord.EndorphinaService.Core.ApplicationServices;
 
-internal class SessionQueuedCommandService : ICommandService<SessionQueuedCommand>
+internal class ScheduleSessionQueuedCommandService : ICommandService<ScheduleSessionQueuedCommand>
 {
-    private readonly ILogger<SessionQueuedCommandService> _logger;
+    private readonly ILogger<ScheduleSessionQueuedCommandService> _logger;
     private readonly IGameInterfaceEndorphinaClient _client;
     private readonly IMessageSender _messageSender;
 
-    public SessionQueuedCommandService(
-        ILogger<SessionQueuedCommandService> logger,
+    public ScheduleSessionQueuedCommandService(
+        ILogger<ScheduleSessionQueuedCommandService> logger,
         IGameInterfaceEndorphinaClient client,
         IMessageSender messageSender)
     {
@@ -23,7 +23,7 @@ internal class SessionQueuedCommandService : ICommandService<SessionQueuedComman
         _messageSender = messageSender ?? throw new ArgumentNullException(nameof(messageSender));
     }
 
-    public async ValueTask ExecuteAsync(SessionQueuedCommand command, CancellationToken cancellationToken = default)
+    public async ValueTask ExecuteAsync(ScheduleSessionQueuedCommand command, CancellationToken cancellationToken = default)
     {
         var sessionInfo = await _client
             .GameSessionInfoAsync(

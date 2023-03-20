@@ -7,11 +7,11 @@ namespace Tgs.GameRecord.EndorphinaService.Messages;
 
 internal class SessionQueuedMessageHandler : IMessageHandler
 {
-    private readonly ICommandService<SessionQueuedCommand> _service;
+    private readonly ICommandService<ScheduleSessionQueuedCommand> _service;
     private readonly ILogger<SessionProcessMessageHandler> _logger;
 
     public SessionQueuedMessageHandler(
-        ICommandService<SessionQueuedCommand> service,
+        ICommandService<ScheduleSessionQueuedCommand> service,
         ILogger<SessionProcessMessageHandler> logger)
     {
         _service = service ?? throw new ArgumentNullException(nameof(service));
@@ -25,7 +25,7 @@ internal class SessionQueuedMessageHandler : IMessageHandler
 
         _logger.LogInformation("SessionQueued Information Received:{LogInfo}", message);
 
-        var command = new SessionQueuedCommand(
+        var command = new ScheduleSessionQueuedCommand(
             ApiUrl: new Uri(message.ApiUrl),
             MerchantId: message.MerchantId,
             SecretKey: message.SecretKey,
