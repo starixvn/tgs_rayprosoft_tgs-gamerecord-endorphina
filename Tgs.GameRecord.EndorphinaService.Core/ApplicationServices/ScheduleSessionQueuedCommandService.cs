@@ -40,9 +40,15 @@ internal class ScheduleSessionQueuedCommandService : ICommandService<ScheduleSes
             return;
         }
 
+        if (sessionInfo.Closed.ToDateTimeOffset() == DateTimeOffset.UnixEpoch)
+        {
+            _logger.LogInformation("Session Id({token}) is Not Expired", command.Token);
+            return;
+        }
+
         if (sessionInfo.ErrorsPending != 0)
         {
-            _logger.LogInformation("Please contact endorphina support for resolution (Session Id:{token})", command.Token);
+            _logger.LogWarning("Please contact endorphina support for resolution (Session Id:{token})", command.Token);
             return;
         }
 
