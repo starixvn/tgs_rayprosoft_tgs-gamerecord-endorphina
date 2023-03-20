@@ -59,7 +59,7 @@ push-docker-image:
     untracked: true   
     policy: pull
   script:
-    - dotnet build "Tgs.GameRecord.EndohphinaService/Tgs.GameRecord.EndorphinaService.csproj" -c $BuildConfiguration -t:ContainerBuild -p:DockerfileTag="$ImageServiceName:$Tag" --no-restore
+    - dotnet build "Tgs.GameRecord.EndorphinaService/Tgs.GameRecord.EndorphinaService.csproj" -c $BuildConfiguration -t:ContainerBuild -p:DockerfileTag="$ImageServiceName:$Tag" --no-restore
     - docker push $ImageServiceName:$Tag
 
 push-k8s-template:
