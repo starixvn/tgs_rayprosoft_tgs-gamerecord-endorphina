@@ -47,6 +47,24 @@ internal class ManualSessionProcessCommandService : ICommandService<ManualSessio
                 .ConfigureAwait(continueOnCapturedContext: false)
                 ?? throw new ArgumentException("sessionInfo");
 
+            if (sessionInfo == null)
+            {
+                _logger.LogInformation("No Session Info (Session Id:{token})", command.Token);
+                return;
+            }
+
+            if (sessionInfo.Closed.ToDateTimeOffset() == DateTimeOffset.UnixEpoch)
+            {
+                _logger.LogInformation("Session Id({token}) is Not Expired", command.Token);
+                return;
+            }
+
+            if (sessionInfo.ErrorsPending != 0)
+            {
+                _logger.LogWarning("Please contact endorphina support for resolution (Session Id:{token})", command.Token);
+                return;
+            }
+
             var sessionStatistics = await _client
                 .GameSessionStatisticsAsync(
                     command.ApiUrl,
