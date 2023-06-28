@@ -132,7 +132,7 @@ internal class GamePullRecordCommandService : ICommandService<GamePullRecordComm
                     commission: 0,
                     turnover: turnover,
                     playerWinLoss: playerWinLoss,
-                    additionalData: JsonSerializer.Serialize(additionalData,new JsonSerializerOptions() { WriteIndented = true }) ?? string.Empty,
+                    additionalData: JsonSerializer.Serialize(additionalData, new JsonSerializerOptions() { WriteIndented = true }) ?? string.Empty,
                     cancellationToken: cancellationToken)
                 .ConfigureAwait(false);
             }
