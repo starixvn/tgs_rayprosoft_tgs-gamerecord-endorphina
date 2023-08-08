@@ -7,13 +7,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tgs.GameRecord.EndorphinaSe
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tgs.GameRecord.EndorphinaService.Core", "Tgs.GameRecord.EndorphinaService.Core\Tgs.GameRecord.EndorphinaService.Core.csproj", "{45E06A92-14D8-4EF9-ADE9-8DA9315FBBBE}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{D82F5ABC-851E-4F01-B0A8-7E89CC1B1BC9}"
-	ProjectSection(SolutionItems) = preProject
-		.editorconfig = .editorconfig
-		CodeMaid.config = CodeMaid.config
-		nuget.config = nuget.config
-	EndProjectSection
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tgs.GameRecord.EndorphinaService.Core.UnitTest", "Tgs.GameRecord.EndorphinaService.Core.UnitTest\Tgs.GameRecord.EndorphinaService.Core.UnitTest.csproj", "{7FA9D69A-E25F-48FD-A697-EF7B301030BC}"
 EndProject
 Global

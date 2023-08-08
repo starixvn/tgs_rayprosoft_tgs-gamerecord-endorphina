@@ -34,7 +34,6 @@ public static class ServiceCollectionExtensions
             .AddGameInterfaceEndorphinaServiceClient(gameInterfaceEndorphinaServiceClientOptions)
             .AddGameRecordEndorphinaSessionClient(gameRecordEndohphinaSessionClientOptions)
             .AddGameRoundsWorkClient()
-            .AddGameRoundsWorkManualClient()
             .AddSingleton<ISessionDispatcher, SessionDispatcher>()
             .AddSingleton<ISessionLock>(sp => ActivatorUtilities.CreateInstance<SessionLock>(sp, sp.GetRequiredService<RedisConnectionManager>().Database))
             .AddTransient<IScheduleDispatch>(sp => ActivatorUtilities.CreateInstance<ScheduleDispatch>(sp, sp.GetRequiredService<RedisConnectionManager>().Database))
