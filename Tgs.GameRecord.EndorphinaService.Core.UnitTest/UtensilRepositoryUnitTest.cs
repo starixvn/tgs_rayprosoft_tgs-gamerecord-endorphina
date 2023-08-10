@@ -52,9 +52,7 @@ public class UtensilRepositoryUnitTest
                 gameProviderId)
             .ConfigureAwait(false);
 
-        Assert.IsNotNull(actual);
-        Assert.IsTrue(actual.HasValue);
-        Assert.AreEqual(gameProviderConfigurationId, actual.Value);
+        Assert.AreEqual(gameProviderConfigurationId, actual);
 
         _ = fakeMemoryCache
             .Received(1)
@@ -106,9 +104,7 @@ public class UtensilRepositoryUnitTest
                 gameExternalId)
             .ConfigureAwait(false);
 
-        Assert.IsNotNull(actual);
-        Assert.IsTrue(actual.HasValue);
-        Assert.AreEqual(gameId, actual.Value);
+        Assert.AreEqual(gameId, actual);
 
         _ = fakeMemoryCache
             .Received(1)

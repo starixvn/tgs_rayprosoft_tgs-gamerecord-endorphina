@@ -31,43 +31,31 @@ internal class GamePullRecordCommandService : ICommandService<GamePullRecordComm
         try
         {
             var gameProviderId = await _utensil
-            .GetGameProviderIdAsync(
+                .GetGameProviderIdAsync(
                 cancellationToken: cancellationToken)
-            .ConfigureAwait(false);
+                .ConfigureAwait(false);
 
             var IsClosed = command.ExternalClosedOn != DateTimeOffset.UnixEpoch;
 
-            bool success = true;
             var playerModel = await _utensil
                 .GetPlayerAsync(
-                    playerCode: command.PlayerCode,
-                    cancellationToken: cancellationToken)
+                playerCode: command.PlayerCode,
+                cancellationToken: cancellationToken)
                 .ConfigureAwait(false);
 
             var gameId = await _utensil
                 .GetGameIdAsync(
-                    gameProviderId: gameProviderId,
-                    gameExternalId: command.GameExternalId,
-                    cancellationToken: cancellationToken).ConfigureAwait(false);
+                gameProviderId: gameProviderId,
+                gameExternalId: command.GameExternalId,
+                cancellationToken: cancellationToken)
+                .ConfigureAwait(false);
 
-            if (playerModel == null || !gameId.HasValue)
-            {
-                success = false;
-            }
-
-            Guid? gameProviderConfigurationId = default;
-            if (playerModel != null)
-            {
-                gameProviderConfigurationId = await _utensil
-                    .GetBrandGameProviderConfigurationIdAsync(
-                        brandId: playerModel.BrandId,
-                        gameProviderId: gameProviderId,
-                        cancellationToken: cancellationToken).ConfigureAwait(false);
-                if (!gameProviderConfigurationId.HasValue)
-                {
-                    success = false;
-                }
-            }
+            var gameProviderConfigurationId = await _utensil
+                .GetBrandGameProviderConfigurationIdAsync(
+                brandId: playerModel.BrandId,
+                gameProviderId: gameProviderId,
+                cancellationToken: cancellationToken)
+                .ConfigureAwait(false);
 
             RoundStatus status = IsClosed ? RoundStatus.Closed : RoundStatus.Open;
 
@@ -108,52 +96,35 @@ internal class GamePullRecordCommandService : ICommandService<GamePullRecordComm
                 JackpotWinAmount = command.JackpotWin
             };
 
-            if (success)
-            {
-                await _client
-                .RoundBidding(
-                    gameProviderId: gameProviderId,
-                    gameProviderCode: _gameRecordInfo.GameProviderCode,
-                    externalRoundId: command.ExternalRoundId,
-                    gameId: gameId!.Value,
-                    externalGameId: command.GameExternalId,
-                    playerCode: playerModel!.PlayerCode,
-                    walletId: playerModel!.DefaultWalletId,
-                    currencyCode: playerModel!.DefaultWalletCurrencyCode,
-                    brandId: playerModel!.BrandId,
-                    gameProviderConfigurationId: gameProviderConfigurationId!.Value,
-                    status: status,
-                    clientStatus: clientStatus,
-                    externalCreatedOn: command.ExternalCreatedOn,
-                    externalClosedOn: command.ExternalClosedOn,
-                    bet: betAmount,
-                    validBet: validBetAmount,
-                    settle: settleAmount,
-                    commission: 0,
-                    turnover: turnover,
-                    playerWinLoss: playerWinLoss,
-                    additionalData: JsonSerializer.Serialize(additionalData, new JsonSerializerOptions() { WriteIndented = true }) ?? string.Empty,
-                    cancellationToken: cancellationToken)
+            await _client
+                .RoundExchangeRateBiddingAsync(
+                gameProviderId: gameProviderId,
+                gameProviderCode: _gameRecordInfo.GameProviderCode,
+                externalRoundId: command.ExternalRoundId,
+                gameId: gameId,
+                externalGameId: command.GameExternalId,
+                playerCode: playerModel.PlayerCode,
+                walletId: playerModel.DefaultWalletId,
+                currencyCode: playerModel.DefaultWalletCurrencyCode,
+                brandId: playerModel.BrandId,
+                gameProviderConfigurationId: gameProviderConfigurationId,
+                status: status,
+                clientStatus: clientStatus,
+                externalCreatedOn: command.ExternalCreatedOn,
+                externalClosedOn: command.ExternalClosedOn,
+                bet: betAmount,
+                validBet: validBetAmount,
+                settle: settleAmount,
+                commission: 0,
+                turnover: turnover,
+                playerWinLoss: playerWinLoss,
+                additionalData: JsonSerializer.Serialize(additionalData, new JsonSerializerOptions() { WriteIndented = true }) ?? string.Empty,
+                cancellationToken: cancellationToken)
                 .ConfigureAwait(false);
-            }
-            else
-            {
-                await _client
-                .RoundMissing(
-                    gameProviderId: gameProviderId,
-                    gameProviderCode: _gameRecordInfo.GameProviderCode,
-                    externalRoundId: command.ExternalRoundId,
-                    gameId: gameId ?? -1,
-                    externalGameId: command.GameExternalId,
-                    playerCode: playerModel?.PlayerCode ?? string.Empty,
-                    data: string.Empty,
-                    cancellationToken: cancellationToken)
-                .ConfigureAwait(false);
-            }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "遊戲紀錄處理發生例外.({record})", command);
+            _logger.LogError(ex, "LogOn:{logOn} Message: game record exception.({gameRecord})", DateTime.Now.ToString("o"), command);
         }
     }
 }
