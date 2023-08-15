@@ -1,8 +1,8 @@
 ﻿using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Tgs.GameRounds.Work.Client;
-using Tgs.GameRounds.Work.Common.Protos;
+using Tgs.GameRecord.Handle.Client;
+using Tgs.GameRecord.Handle.Common.Protos;
 using Tgs.ServiceUtility;
 
 namespace Tgs.GameRecord.EndorphinaService.Core.ApplicationServices;
@@ -11,53 +11,25 @@ internal class GamePullRecordCommandService : ICommandService<GamePullRecordComm
 {
     private readonly GameRecordInfoOptions _gameRecordInfo;
     private readonly ILogger<GamePullRecordCommandService> _logger;
-    private readonly IGameRoundsWorkClient _client;
-    private readonly IUtensil _utensil;
+    private readonly IGameRecordHandleClient _client;
 
     public GamePullRecordCommandService(
         IOptions<GameRecordInfoOptions> options,
         ILogger<GamePullRecordCommandService> logger,
-        IGameRoundsWorkClient client,
-        IUtensil utensil)
+        IGameRecordHandleClient client)
     {
         _gameRecordInfo = options.Value;
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _client = client ?? throw new ArgumentNullException(nameof(client));
-        _utensil = utensil ?? throw new ArgumentNullException(nameof(utensil));
     }
 
     public async ValueTask ExecuteAsync(GamePullRecordCommand command, CancellationToken cancellationToken = default)
     {
         try
         {
-            var gameProviderId = await _utensil
-                .GetGameProviderIdAsync(
-                cancellationToken: cancellationToken)
-                .ConfigureAwait(false);
-
             var IsClosed = command.ExternalClosedOn != DateTimeOffset.UnixEpoch;
 
-            var playerModel = await _utensil
-                .GetPlayerAsync(
-                playerCode: command.PlayerCode,
-                cancellationToken: cancellationToken)
-                .ConfigureAwait(false);
-
-            var gameId = await _utensil
-                .GetGameIdAsync(
-                gameProviderId: gameProviderId,
-                gameExternalId: command.GameExternalId,
-                cancellationToken: cancellationToken)
-                .ConfigureAwait(false);
-
-            var gameProviderConfigurationId = await _utensil
-                .GetBrandGameProviderConfigurationIdAsync(
-                brandId: playerModel.BrandId,
-                gameProviderId: gameProviderId,
-                cancellationToken: cancellationToken)
-                .ConfigureAwait(false);
-
-            RoundStatus status = IsClosed ? RoundStatus.Closed : RoundStatus.Open;
+            var status = IsClosed ? GameRecordStatus.Closed : GameRecordStatus.Open;
 
             var playerWinLoss = 0.0m;
             DateTimeOffset? externalClosedOn = null;
@@ -65,7 +37,7 @@ internal class GamePullRecordCommandService : ICommandService<GamePullRecordComm
             var validBetAmount = 0.0m;
             var settleAmount = 0.0m;
             var turnover = 0.0m;
-            if (status == RoundStatus.Closed)
+            if (status == GameRecordStatus.Closed)
             {
                 betAmount = command.Bet;
                 validBetAmount = command.Bet;
@@ -77,11 +49,11 @@ internal class GamePullRecordCommandService : ICommandService<GamePullRecordComm
 
             var clientStatus = IsClosed
                 ? playerWinLoss > 0
-                    ? RoundClientStatus.Win
+                    ? GameRecordClientStatus.Win
                     : playerWinLoss == 0
-                        ? RoundClientStatus.Draw
-                        : RoundClientStatus.Loss
-                : RoundClientStatus.Open;
+                        ? GameRecordClientStatus.Draw
+                        : GameRecordClientStatus.Loss
+                : GameRecordClientStatus.Open;
 
             var additionalData = new
             {
@@ -97,17 +69,11 @@ internal class GamePullRecordCommandService : ICommandService<GamePullRecordComm
             };
 
             await _client
-                .RoundExchangeRateBiddingAsync(
-                gameProviderId: gameProviderId,
+                .MessageAsync(
                 gameProviderCode: _gameRecordInfo.GameProviderCode,
                 externalRoundId: command.ExternalRoundId,
-                gameId: gameId,
                 externalGameId: command.GameExternalId,
-                playerCode: playerModel.PlayerCode,
-                walletId: playerModel.DefaultWalletId,
-                currencyCode: playerModel.DefaultWalletCurrencyCode,
-                brandId: playerModel.BrandId,
-                gameProviderConfigurationId: gameProviderConfigurationId,
+                playerCode: command.PlayerCode,
                 status: status,
                 clientStatus: clientStatus,
                 externalCreatedOn: command.ExternalCreatedOn,
@@ -124,7 +90,7 @@ internal class GamePullRecordCommandService : ICommandService<GamePullRecordComm
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "LogOn:{logOn} Message: game record exception.({gameRecord})", DateTime.Now.ToString("o"), command);
+            _logger.LogError(ex, "LogOn:{logOn} Message: An exception occurred in this game record.({gameRecord})", DateTime.Now.ToString("o"), command);
         }
     }
 }

@@ -18,24 +18,22 @@ public static class ServiceCollectionExtensions
         Action<GameInterfaceEndorphinaClientOptions, IServiceProvider> gameInterfaceEndorphinaServiceClientOptions,
         Action<GameRecordEndorphinaSessionClientOptions, IServiceProvider> gameRecordEndohphinaSessionClientOptions)
         => services
-            .AddOptions<RedisOptions>()
-            .Configure(redisDBconfigure)
-            .Services
-            .AddOptions<GameRecordInfoOptions>()
-            .Configure(gameRecordInfoOptions)
-            .Services
-            .RegisterAllServiceUtilityTypes(
-                Assembly.GetExecutingAssembly(),
-                ServiceLifetime.Transient)
-            .AddMemoryCache()
-            .AddSingleton<RedisConnectionManager>()
-            .AddGameCommandClient(gameCommandClientOptions)
-            .AddGameRoundsScheduleClient(gameRoundsScheduleClientOptions)
-            .AddGameInterfaceEndorphinaServiceClient(gameInterfaceEndorphinaServiceClientOptions)
-            .AddGameRecordEndorphinaSessionClient(gameRecordEndohphinaSessionClientOptions)
-            .AddGameRoundsWorkClient()
-            .AddSingleton<ISessionDispatcher, SessionDispatcher>()
-            .AddSingleton<ISessionLock>(sp => ActivatorUtilities.CreateInstance<SessionLock>(sp, sp.GetRequiredService<RedisConnectionManager>().Database))
-            .AddTransient<IScheduleDispatch>(sp => ActivatorUtilities.CreateInstance<ScheduleDispatch>(sp, sp.GetRequiredService<RedisConnectionManager>().Database))
-            .AddTransient<IUtensil>(sp => ActivatorUtilities.CreateInstance<UtensilRepository>(sp, TimeSpan.FromHours(1)));
+        .AddOptions<RedisOptions>()
+        .Configure(redisDBconfigure)
+        .Services
+        .AddOptions<GameRecordInfoOptions>()
+        .Configure(gameRecordInfoOptions)
+        .Services
+        .RegisterAllServiceUtilityTypes(
+            Assembly.GetExecutingAssembly(),
+            ServiceLifetime.Transient)
+        .AddSingleton<RedisConnectionManager>()
+        .AddGameCommandClient(gameCommandClientOptions)
+        .AddGameRoundsScheduleClient(gameRoundsScheduleClientOptions)
+        .AddGameInterfaceEndorphinaServiceClient(gameInterfaceEndorphinaServiceClientOptions)
+        .AddGameRecordEndorphinaSessionClient(gameRecordEndohphinaSessionClientOptions)
+        .AddGameRecordHandleClient()
+        .AddSingleton<ISessionDispatcher, SessionDispatcher>()
+        .AddSingleton<ISessionLock>(sp => ActivatorUtilities.CreateInstance<SessionLock>(sp, sp.GetRequiredService<RedisConnectionManager>().Database))
+        .AddTransient<IScheduleDispatch>(sp => ActivatorUtilities.CreateInstance<ScheduleDispatch>(sp, sp.GetRequiredService<RedisConnectionManager>().Database));
 }
