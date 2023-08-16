@@ -90,10 +90,10 @@ builder.Services
             var configuration = sp.GetRequiredService<IConfiguration>();
             options.Url = configuration.GetConnectionString("Nats")!;
         })
-        .AddHandler<ScheduleMessageHandler>(subject: "gp.gamerecord.schedule.endor", "gp.gamerecord.schedule")
-        .AddProcessor<ManualMessageHandler>(subject: "gp.gamerecord.manual.endor", queue: "gp.gamerecord.manual")
-        .AddHandler<SessionQueuedMessageHandler>(subject: "gp.gamerecord.endor.session.queued", "gp.gamerecord.endor.session")
-        .AddHandler<SessionProcessMessageHandler>(subject: "gp.gamerecord.endor.session.process", "gp.gamerecord.endor.session");
+        .AddHandler<ScheduleMessageHandler>(subject: "gp.gamerecord.schedule.endor", group: "gp.gamerecord.schedule.endor")
+        .AddProcessor<ManualMessageHandler>(subject: "gp.gamerecord.manual.endor", queue: "gp.gamerecord.manual.endor")
+        .AddHandler<SessionQueuedMessageHandler>(subject: "gp.gamerecord.endor.session.queued", group: "gp.gamerecord.endor.session.queued")
+        .AddHandler<SessionProcessMessageHandler>(subject: "gp.gamerecord.endor.session.process", group: "gp.gamerecord.endor.session.process");
     })
     .ClearAllExchanges()
     .AddNatsGlobPatternExchange("*");
