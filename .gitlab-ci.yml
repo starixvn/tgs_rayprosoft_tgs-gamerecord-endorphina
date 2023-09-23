@@ -1,8 +1,8 @@
 variables:
   ImageServiceName: pgtgs/game-gamerecord-endor
   SettingServiceKey: game-gamerecord-endor
-  HelmTemplateFolderServiceName: game-gamerecord-endor-service
-  BuildCacheKey: Tgs.GameRecord.EndorphinaService.$CI_PIPELINE_ID
+  HelmTemplateFolderServiceName: game-gamerecord-endor
+  BuildCacheKey: Tgs.GameRecord.Endorphina.$CI_PIPELINE_ID
 
 default:
   before_script:
@@ -59,7 +59,7 @@ push-docker-image:
     untracked: true   
     policy: pull
   script:
-    - dotnet build "Tgs.GameRecord.EndorphinaService/Tgs.GameRecord.EndorphinaService.csproj" -c $BuildConfiguration -t:ContainerBuild -p:DockerfileTag="$ImageServiceName:$Tag" --no-restore
+    - dotnet build "Tgs.GameRecord.Endorphina/Tgs.GameRecord.Endorphina.csproj" -c $BuildConfiguration -t:ContainerBuild -p:DockerfileTag="$ImageServiceName:$Tag" --no-restore
     - docker push $ImageServiceName:$Tag
 
 push-k8s-template:
