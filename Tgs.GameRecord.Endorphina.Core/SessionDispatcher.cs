@@ -7,42 +7,31 @@ using Valhalla.MessageQueue;
 
 namespace Tgs.GameRecord.Endorphina.Core;
 
-internal class SessionDispatcher : ISessionDispatcher
+internal class SessionDispatcher(
+    ILogger<SessionDispatcher> logger,
+    IMessageSender messageSender,
+    IGameRecordEndorphinaSessionClient client) : ISessionDispatcher
 {
-    private readonly ILogger<SessionDispatcher> _logger;
-    private readonly IMessageSender _messageSender;
-    private readonly IGameRecordEndorphinaSessionClient _client;
-
-    public SessionDispatcher(
-        ILogger<SessionDispatcher> logger,
-        IMessageSender messageSender,
-        IGameRecordEndorphinaSessionClient client)
-    {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _messageSender = messageSender ?? throw new ArgumentNullException(nameof(messageSender));
-        _client = client ?? throw new ArgumentNullException(nameof(client));
-    }
-
     public async ValueTask ExecuteAsync(
         Uri apiUrl,
         string merchantId,
         string secretKey,
         CancellationToken cancellationToken = default)
     {
-        var sessions = await _client
+        var sessions = await client
             .QuerySessionsAsync(TokenState.Queued, merchantId, cancellationToken)
             .ToArrayAsync(cancellationToken)
             .ConfigureAwait(false);
 
         if (sessions is null)
         {
-            _logger.LogError("LogOn:{logOn} Message: The sessions are null.", DateTime.Now.ToString("o"));
+            logger.LogError("LogOn:{logOn} Message: The sessions are null.", DateTime.Now.ToString("o"));
             return;
         }
 
-        if (!sessions.Any())
+        if (sessions.Length == 0)
         {
-            _logger.LogInformation("LogOn:{logOn} Message: The sessions are empty.", DateTime.Now.ToString("o"));
+            logger.LogInformation("LogOn:{logOn} Message: The sessions are empty.", DateTime.Now.ToString("o"));
             return;
         }
 
@@ -50,11 +39,11 @@ internal class SessionDispatcher : ISessionDispatcher
         {
             if (session.Retry >= 3)
             {
-                await _client
+                await client
                     .MoveFailedAsync(session.Token, cancellationToken)
                     .ConfigureAwait(false);
 
-                _logger.LogWarning("Move Failed session {token}", session.Token);
+                logger.LogWarning("Move Failed session {token}", session.Token);
                 continue;
             }
 
@@ -66,7 +55,7 @@ internal class SessionDispatcher : ISessionDispatcher
                 Token = session.Token,
             };
 
-            await _messageSender
+            await messageSender
                 .PublishAsync(subject: "gp.gamerecord.endor.session.queued", request.ToByteArray(), cancellationToken)
                 .ConfigureAwait(false);
         }

@@ -1,7 +1,9 @@
 ﻿using Microsoft.Extensions.Options;
 using StackExchange.Redis;
+using Tgs.GameRecord.Endorphina.Core;
+using Tgs.GameRecord.Endorphina;
 
-namespace Tgs.GameRecord.Endorphina.Core;
+namespace Tgs.GameRecord.Endorphina;
 
 internal class RedisConnectionManager : IDisposable
 {

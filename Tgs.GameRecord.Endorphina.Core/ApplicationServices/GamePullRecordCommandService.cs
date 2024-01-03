@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using System.Text.Json.Nodes;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Tgs.GameRecord.Handle.Client;
@@ -7,21 +8,13 @@ using Tgs.ServiceUtility;
 
 namespace Tgs.GameRecord.Endorphina.Core.ApplicationServices;
 
-internal class GamePullRecordCommandService : ICommandService<GamePullRecordCommand>
+internal class GamePullRecordCommandService(
+    IOptions<GameRecordInfoOptions> options,
+    ILogger<GamePullRecordCommandService> logger,
+    IGameRecordHandleClient client) : ICommandService<GamePullRecordCommand>
 {
-    private readonly GameRecordInfoOptions _gameRecordInfo;
-    private readonly ILogger<GamePullRecordCommandService> _logger;
-    private readonly IGameRecordHandleClient _client;
-
-    public GamePullRecordCommandService(
-        IOptions<GameRecordInfoOptions> options,
-        ILogger<GamePullRecordCommandService> logger,
-        IGameRecordHandleClient client)
-    {
-        _gameRecordInfo = options.Value;
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _client = client ?? throw new ArgumentNullException(nameof(client));
-    }
+    private readonly GameRecordInfoOptions _gameRecordInfo = options.Value;
+    private readonly JsonSerializerOptions _jsonSerializerOptions = new() { WriteIndented = true };
 
     public ValueTask ExecuteAsync(GamePullRecordCommand command, CancellationToken cancellationToken = default)
     {
@@ -63,7 +56,7 @@ internal class GamePullRecordCommandService : ICommandService<GamePullRecordComm
                 JackpotWinAmount = command.JackpotWin
             };
 
-            return _client
+            return client
                 .MessageAsync(
                 gameProviderCode: _gameRecordInfo.GameProviderCode,
                 playerCode: command.PlayerCode,
@@ -86,12 +79,12 @@ internal class GamePullRecordCommandService : ICommandService<GamePullRecordComm
                 commission: 0,
                 turnover: turnover,
                 winLoss: playerWinLoss,
-                additionalData: JsonSerializer.Serialize(additionalData, new JsonSerializerOptions() { WriteIndented = true }) ?? string.Empty,
+                additionalData: JsonNode.Parse(JsonSerializer.Serialize(additionalData, options: _jsonSerializerOptions) ?? "{}")!,
                 cancellationToken: cancellationToken);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "LogOn:{logOn} Message: An exception occurred in this game record.({gameRecord})", DateTime.Now.ToString("o"), command);
+            logger.LogError(ex, "LogOn:{logOn} Message: An exception occurred in this game record.({gameRecord})", DateTime.Now.ToString("o"), command);
         }
         return ValueTask.CompletedTask;
     }

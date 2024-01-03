@@ -6,19 +6,10 @@ using Valhalla.MessageQueue;
 
 namespace Tgs.GameRecord.Endorphina.Messages;
 
-internal class ManualMessageHandler : IMessageProcessor
+internal class ManualMessageHandler(
+    ILogger<ManualMessageHandler> logger,
+    ICommandService<ManualSessionProcessCommand> service) : IMessageProcessor
 {
-    private readonly ILogger<ManualMessageHandler> _logger;
-    private readonly ICommandService<ManualSessionProcessCommand> _service;
-
-    public ManualMessageHandler(
-        ILogger<ManualMessageHandler> logger,
-        ICommandService<ManualSessionProcessCommand> service)
-    {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _service = service ?? throw new ArgumentNullException(nameof(service));
-    }
-
     public async ValueTask<ReadOnlyMemory<byte>> HandleAsync(ReadOnlyMemory<byte> data, CancellationToken cancellationToken = default)
     {
         var json = Encoding.UTF8.GetString(data.Span);
@@ -26,13 +17,13 @@ internal class ManualMessageHandler : IMessageProcessor
 
         if (message == null)
         {
-            _logger.LogError("Information Received:{LogInfo}", message);
+            logger.LogError("Information Received:{LogInfo}", message);
             return Encoding.UTF8.GetBytes(JsonSerializer.Serialize(new ManualMessageResponse(false)));
         }
 
-        _logger.LogInformation("Information Received:{LogInfo}", message);
+        logger.LogInformation("Information Received:{LogInfo}", message);
 
-        await _service.ExecuteAsync(new ManualSessionProcessCommand(
+        await service.ExecuteAsync(new ManualSessionProcessCommand(
             ApiUrl: message.ApiUrl,
             MerchantId: message.MerchantId,
             SecretKey: message.SecretKey,

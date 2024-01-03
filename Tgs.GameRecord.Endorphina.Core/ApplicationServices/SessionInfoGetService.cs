@@ -4,22 +4,13 @@ using Tgs.ServiceUtility;
 
 namespace Tgs.GameRecord.Endorphina.Core.ApplicationServices;
 
-internal class SessionInfoGetService : IGetService<SessionInfoQuery, SessionInfoResult?>
+internal class SessionInfoGetService(
+    IGameInterfaceEndorphinaClient client,
+    ILogger<SessionInfoGetService> logger) : IGetService<SessionInfoQuery, SessionInfoResult?>
 {
-    private readonly IGameInterfaceEndorphinaClient _client;
-    private readonly ILogger<SessionInfoGetService> _logger;
-
-    public SessionInfoGetService(
-        IGameInterfaceEndorphinaClient client,
-        ILogger<SessionInfoGetService> logger)
-    {
-        _client = client ?? throw new ArgumentNullException(nameof(client));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    }
-
     public async ValueTask<SessionInfoResult?> GetAsync(SessionInfoQuery query, CancellationToken cancellationToken = default)
     {
-        var sessionInfo = await _client
+        var sessionInfo = await client
                 .GameSessionInfoAsync(
                     query.ApiUrl,
                     query.MerchantId,
@@ -30,13 +21,13 @@ internal class SessionInfoGetService : IGetService<SessionInfoQuery, SessionInfo
 
         if (sessionInfo == null)
         {
-            _logger.LogInformation("No Session Info (Session Id:{token})", query.Token);
+            logger.LogInformation("No Session Info (Session Id:{token})", query.Token);
             return null;
         }
 
         if (sessionInfo.ErrorsPending != 0)
         {
-            _logger.LogInformation("Please contact endorphina support for resolution (Session Id:{token})", query.Token);
+            logger.LogInformation("Please contact endorphina support for resolution (Session Id:{token})", query.Token);
             return null;
         }
 

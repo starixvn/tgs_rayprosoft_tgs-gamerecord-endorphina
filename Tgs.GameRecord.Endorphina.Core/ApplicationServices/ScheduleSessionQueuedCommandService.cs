@@ -7,25 +7,14 @@ using Valhalla.MessageQueue;
 
 namespace Tgs.GameRecord.Endorphina.Core.ApplicationServices;
 
-internal class ScheduleSessionQueuedCommandService : ICommandService<ScheduleSessionQueuedCommand>
+internal class ScheduleSessionQueuedCommandService(
+    ILogger<ScheduleSessionQueuedCommandService> logger,
+    IGameInterfaceEndorphinaClient client,
+    IMessageSender messageSender) : ICommandService<ScheduleSessionQueuedCommand>
 {
-    private readonly ILogger<ScheduleSessionQueuedCommandService> _logger;
-    private readonly IGameInterfaceEndorphinaClient _client;
-    private readonly IMessageSender _messageSender;
-
-    public ScheduleSessionQueuedCommandService(
-        ILogger<ScheduleSessionQueuedCommandService> logger,
-        IGameInterfaceEndorphinaClient client,
-        IMessageSender messageSender)
-    {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _client = client ?? throw new ArgumentNullException(nameof(client));
-        _messageSender = messageSender ?? throw new ArgumentNullException(nameof(messageSender));
-    }
-
     public async ValueTask ExecuteAsync(ScheduleSessionQueuedCommand command, CancellationToken cancellationToken = default)
     {
-        var sessionInfo = await _client
+        var sessionInfo = await client
             .GameSessionInfoAsync(
                 command.ApiUrl,
                 command.MerchantId,
@@ -36,19 +25,19 @@ internal class ScheduleSessionQueuedCommandService : ICommandService<ScheduleSes
 
         if (sessionInfo == null)
         {
-            _logger.LogInformation("No Session Info (Session Id:{token})", command.Token);
+            logger.LogInformation("No Session Info (Session Id:{token})", command.Token);
             return;
         }
 
         if (sessionInfo.Closed.ToDateTimeOffset() == DateTimeOffset.UnixEpoch)
         {
-            _logger.LogInformation("Session Id({token}) is Not Expired", command.Token);
+            logger.LogInformation("Session Id({token}) is Not Expired", command.Token);
             return;
         }
 
         if (sessionInfo.ErrorsPending != 0)
         {
-            _logger.LogWarning("Please contact endorphina support for resolution (Session Id:{token})", command.Token);
+            logger.LogWarning("Please contact endorphina support for resolution (Session Id:{token})", command.Token);
             return;
         }
 
@@ -60,7 +49,7 @@ internal class ScheduleSessionQueuedCommandService : ICommandService<ScheduleSes
             Token = command.Token
         };
 
-        await _messageSender
+        await messageSender
             .PublishAsync(subject: "gp.gamerecord.endor.session.process", request.ToByteArray(), cancellationToken)
             .ConfigureAwait(false);
     }
