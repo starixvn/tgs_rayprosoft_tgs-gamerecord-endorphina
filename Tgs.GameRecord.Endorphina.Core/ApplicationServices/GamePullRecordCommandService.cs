@@ -1,91 +1,112 @@
 ﻿using System.Text.Json;
-using System.Text.Json.Nodes;
+using Google.Protobuf.WellKnownTypes;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Tgs.GameRecord.Handle.Client;
-using Tgs.GameRecord.Handle.Common.Protos;
 using Tgs.ServiceUtility;
+using Valhalla.MessageQueue;
 
 namespace Tgs.GameRecord.Endorphina.Core.ApplicationServices;
 
 internal class GamePullRecordCommandService(
-    IOptions<GameRecordInfoOptions> options,
-    ILogger<GamePullRecordCommandService> logger,
-    IGameRecordHandleClient client) : ICommandService<GamePullRecordCommand>
+	ILogger<GamePullRecordCommandService> logger,
+	IOptions<GameRecordInfoOptions> options,
+	IMessageSender messageSender) : ICommandService<GamePullRecordCommand>
 {
-    private readonly GameRecordInfoOptions _gameRecordInfo = options.Value;
-    private readonly JsonSerializerOptions _jsonSerializerOptions = new() { WriteIndented = true };
+	private readonly GameRecordInfoOptions _gameRecordInfo = options.Value;
+	private readonly JsonSerializerOptions _jsonSerializerOptions = new() { WriteIndented = true };
 
-    public ValueTask ExecuteAsync(GamePullRecordCommand command, CancellationToken cancellationToken = default)
-    {
-        try
-        {
-            var playerWinLoss = 0.0m;
-            var wagerState = WagerStates.Running;
-            var externalCreatedOn = command.ExternalCreatedOn;
-            var externalClosedOn = DateTimeOffset.UnixEpoch;
-            var betAmount = 0.0m;
-            var validBetAmount = 0.0m;
-            var settleAmount = 0.0m;
-            var turnover = 0.0m;
-            if (command.ExternalClosedOn != DateTimeOffset.UnixEpoch)
-            {
-                betAmount = command.Bet;
-                validBetAmount = command.Bet;
-                externalClosedOn = command.ExternalClosedOn;
-                settleAmount = command.Win;
-                turnover = command.Bet;
-                playerWinLoss = command.Win - command.Bet;
-                wagerState = playerWinLoss > 0
-                    ? WagerStates.Win
-                    : playerWinLoss == 0
-                    ? WagerStates.Draw
-                    : WagerStates.Lose;
-            }
+	public async ValueTask ExecuteAsync(GamePullRecordCommand command, CancellationToken cancellationToken = default)
+	{
+		try
+		{
+			var winLoss = 0.0m;
+			var betState = Handle.Common.Protos.BetState.Running;
+			var externalCreatedOn = command.ExternalCreatedOn;
+			var externalClosedOn = DateTimeOffset.UnixEpoch;
+			var bet = 0.0m;
+			var validBet = 0.0m;
+			var settle = 0.0m;
+			var turnover = 0.0m;
+			if (command.ExternalClosedOn != DateTimeOffset.UnixEpoch)
+			{
+				bet = command.Bet;
+				validBet = command.Bet;
+				externalClosedOn = command.ExternalClosedOn;
+				settle = command.Win;
+				turnover = command.Bet;
+				winLoss = command.Win - command.Bet;
+				betState = winLoss > 0
+					? Handle.Common.Protos.BetState.Win
+					: winLoss == 0
+					? Handle.Common.Protos.BetState.Draw
+					: Handle.Common.Protos.BetState.Loss;
+			}
 
-            var additionalData = new
-            {
-                command.ExternalRoundId,
-                Username = command.PlayerCode,
-                GameName = command.GameExternalId,
-                command.ExternalCurrency,
-                command.Games,
-                BetAmount = command.Bet,
-                WinAmount = command.Win,
-                command.Jackpots,
-                JackpotWinAmount = command.JackpotWin
-            };
+			var additionalData = new
+			{
+				command.ExternalRoundId,
+				Username = command.PlayerCode,
+				GameName = command.GameExternalId,
+				command.ExternalCurrency,
+				command.Games,
+				BetAmount = command.Bet,
+				WinAmount = command.Win,
+				command.Jackpots,
+				JackpotWinAmount = command.JackpotWin
+			};
 
-            return client
-                .MessageAsync(
-                gameProviderCode: _gameRecordInfo.GameProviderCode,
-                playerCode: command.PlayerCode,
-                wagerState: wagerState,
-                wagerType: WagerTypes.Normal,
-                freeGameState: FreeGameStates.None,
-                gambleState: GambleStates.None,
-                cashoutState: CashoutStates.None,
-                resettleState: ResettleStates.None,
-                externalRoundId: command.ExternalRoundId,
-                externalWagerId: command.ExternalRoundId,
-                externalGameId: command.GameExternalId,
-                externalCreatedOn: externalCreatedOn,
-                externalClosedOn: externalClosedOn,
-                externalPayoffOn: externalClosedOn,
-                externalResettleOn: DateTimeOffset.UnixEpoch,
-                bet: betAmount,
-                validBet: validBetAmount,
-                settle: settleAmount,
-                commission: 0,
-                turnover: turnover,
-                winLoss: playerWinLoss,
-                additionalData: JsonNode.Parse(JsonSerializer.Serialize(additionalData, options: _jsonSerializerOptions) ?? "{}")!,
-                cancellationToken: cancellationToken);
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "LogOn:{logOn} Message: An exception occurred in this game record.({gameRecord})", DateTime.Now.ToString("o"), command);
-        }
-        return ValueTask.CompletedTask;
-    }
+			var request = new Handle.Common.Protos.GameRecordHandleRequest
+			{
+				GameProviderCode = _gameRecordInfo.GameProviderCode,
+				PlayerCode = command.PlayerCode,
+				ExternalRoundId = command.ExternalRoundId,
+				ExternalBetId = command.ExternalRoundId,
+				ExternalGameId = command.GameExternalId,
+				ExternalCreatedOn = externalCreatedOn.ToTimestamp(),
+				ExternalClosedOn = externalClosedOn.ToTimestamp(),
+				ExternalPayoffOn = externalClosedOn.ToTimestamp(),
+				ExternalResettleOn = DateTimeOffset.UnixEpoch.ToTimestamp(),
+				BetState = betState,
+				BetType = Handle.Common.Protos.BetType.Normal,
+				FreeGameState = Handle.Common.Protos.FreeGameState.None,
+				GambleState = Handle.Common.Protos.GambleState.None,
+				CashoutState = Handle.Common.Protos.CashoutState.None,
+				ResettleState = Handle.Common.Protos.ResettleState.None,
+				JackpotState = Handle.Common.Protos.JackpotState.None,
+				Bet = bet,
+				ValidBet = validBet,
+				Settle = settle,
+				Commission = 0.0m,
+				Turnover = turnover,
+				WinLoss = winLoss,
+				Jackpot = 0.0M,
+				AdditionalData = JsonSerializer.Serialize(additionalData, options: _jsonSerializerOptions) ?? "{}"
+			};
+
+			await messageSender.PublishAsync(
+				subject: Handle.Common.GameRecordHandleNatsConst.GameRecordHandleRequest,
+				data: request,
+				cancellationToken: cancellationToken)
+				.ConfigureAwait(false);
+
+			logger.LogInformation("LogOn:{logOn} Subject:{subject} Mesaage:This publication requests information.({request})",
+				DateTime.Now.ToString("o"),
+				Handle.Common.GameRecordHandleNatsConst.GameRecordHandleRequest,
+				new
+				{
+					request.GameProviderCode,
+					request.PlayerCode,
+					request.ExternalRoundId,
+					request.ExternalBetId,
+					request.ExternalGameId,
+					ExternalCreatedOn = request.ExternalCreatedOn.ToDateTimeOffset(),
+					ExternalClosedOn = request.ExternalClosedOn.ToDateTimeOffset(),
+					request.BetState
+				});
+		}
+		catch (Exception ex)
+		{
+			logger.LogError(ex, "LogOn:{logOn} Message: An exception occurred in this game record.({gameRecord})", DateTime.Now.ToString("o"), command);
+		}
+	}
 }

@@ -7,9 +7,11 @@ data:
   appsettings.json: |
     {
       "Logging": {
-         "LogLevel": {
-          "Default": "Warning"
-          }
+        "LogLevel": {
+          "Default": "Warning",
+          "Tgs.GameRecord.Endorphina.Messages": "Information",
+          "Tgs.GameRecord.Endorphina.Core.ApplicationServices.GamePullRecordCommandService": "Information"
+        }
       },
       "GameRecord": {
         "GameCommandClientBaseUrl": "http://game-gamecommand/",

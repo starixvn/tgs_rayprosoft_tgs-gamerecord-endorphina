@@ -6,16 +6,16 @@ namespace Tgs.GameRecord.Endorphina.Controllers;
 [Route("[controller]")]
 [ApiController]
 public class InfoController(
-    IConfiguration configuration) : ControllerBase
+	IConfiguration configuration) : ControllerBase
 {
-    [HttpGet]
-    public object Get()
-    {
-        var gameRecordInfo = configuration.GetSection("GameRecordInfo").Get<GameRecordInfoOptions>();
+	[HttpGet]
+	public object Get()
+	{
+		var gameRecordInfo = configuration.GetSection("GameRecordInfo").Get<GameRecordInfoOptions>();
 
-        return new
-        {
-            gameRecordInfo,
-        };
-    }
+		return new
+		{
+			gameRecordInfo,
+		};
+	}
 }

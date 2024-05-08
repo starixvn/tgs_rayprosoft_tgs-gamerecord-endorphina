@@ -7,26 +7,23 @@ using Valhalla.MessageQueue;
 namespace Tgs.GameRecord.Endorphina.Messages;
 
 internal class ScheduleMessageHandler(
-    ILogger<ScheduleMessageHandler> logger,
-    ICommandService<ScheduleDispatchCommand> service) : IMessageHandler
+	ILogger<ScheduleMessageHandler> logger,
+	ICommandService<ScheduleDispatchCommand> service) : IMessageHandler<ReadOnlyMemory<byte>>
 {
-    public ValueTask HandleAsync(ReadOnlyMemory<byte> data, CancellationToken cancellationToken = default)
-    {
-        var json = Encoding.UTF8.GetString(data.Span);
+	public ValueTask HandleAsync(string subject, ReadOnlyMemory<byte> data, IEnumerable<MessageHeaderValue>? headerValues, CancellationToken cancellationToken = default)
+	{
+		var json = Encoding.UTF8.GetString(data.Span);
+		var message = JsonSerializer.Deserialize<ScheduleMessageModel>(json)
+			?? throw new NullReferenceException("The request data resolves to a null value");
 
-        var messageModel = JsonSerializer.Deserialize<ScheduleMessageModel>(json);
+		logger.LogInformation("LogOn:{logOn} Subject:{subject} Information Request:{message}",
+			DateTime.Now.ToString("o"),
+			subject,
+			message);
 
-        if (messageModel == null)
-        {
-            logger.LogError("Information Received:{LogInfo}", messageModel);
-            return ValueTask.CompletedTask;
-        }
-
-        logger.LogInformation("Information Received:{LogInfo}", messageModel);
-
-        return service.ExecuteAsync(new ScheduleDispatchCommand(
-            ApiUrl: messageModel.ApiUrl,
-            MerchantId: messageModel.MerchantId,
-            SecretKey: messageModel.SecretKey), cancellationToken);
-    }
+		return service.ExecuteAsync(new ScheduleDispatchCommand(
+			ApiUrl: message.ApiUrl,
+			MerchantId: message.MerchantId,
+			SecretKey: message.SecretKey), cancellationToken);
+	}
 }

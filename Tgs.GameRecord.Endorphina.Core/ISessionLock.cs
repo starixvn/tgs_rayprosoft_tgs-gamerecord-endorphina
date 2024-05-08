@@ -2,9 +2,9 @@
 
 public interface ISessionLock
 {
-    Task<bool> LockAsync(
-        string token);
+	Task<bool> LockAsync(
+		string token);
 
-    Task<bool> UnlockAsync(
-        string token);
+	Task<bool> UnlockAsync(
+		string token);
 }

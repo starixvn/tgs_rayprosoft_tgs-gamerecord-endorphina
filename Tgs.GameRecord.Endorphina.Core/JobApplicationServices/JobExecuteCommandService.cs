@@ -7,24 +7,24 @@ using Valhalla.MessageQueue;
 namespace Tgs.GameRecord.Endorphina.Core.JobApplicationServices;
 
 internal class JobExecuteCommandService(
-    ILogger<JobExecuteCommandService> logger,
-    IMessageSender messageSender) : ICommandService<JobExecuteCommand>
+	ILogger<JobExecuteCommandService> logger,
+	IMessageSender messageSender) : ICommandService<JobExecuteCommand>
 {
-    public ValueTask ExecuteAsync(JobExecuteCommand command, CancellationToken cancellationToken = default)
-    {
-        var parameters = new
-        {
-            command.ApiUrl,
-            command.MerchantId,
-            command.SecretKey
-        };
+	public ValueTask ExecuteAsync(JobExecuteCommand command, CancellationToken cancellationToken = default)
+	{
+		var parameters = new
+		{
+			command.ApiUrl,
+			command.MerchantId,
+			command.SecretKey
+		};
 
-        logger.LogDebug("LogOn:{logOn} Parameters:{parameters}", DateTime.Now.ToString("u"), parameters);
+		logger.LogDebug("LogOn:{logOn} Parameters:{parameters}", DateTime.Now.ToString("u"), parameters);
 
-        return messageSender
-            .PublishAsync(
-            subject: "gp.gamerecord.schedule.endor",
-            data: Encoding.UTF8.GetBytes(JsonSerializer.Serialize(parameters)),
-            cancellationToken: cancellationToken);
-    }
+		return messageSender
+			.PublishAsync(
+			subject: "gp.gamerecord.schedule.endor",
+			data: Encoding.UTF8.GetBytes(JsonSerializer.Serialize(parameters)),
+			cancellationToken: cancellationToken);
+	}
 }
