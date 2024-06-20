@@ -9,8 +9,12 @@ data:
       "Logging": {
         "LogLevel": {
           "Default": "Warning",
-          "Tgs.GameRecord.Endorphina.Messages": "Information",
-          "Tgs.GameRecord.Endorphina.Core.ApplicationServices.GamePullRecordCommandService": "Information"
+          "Grpc.Net.Client.Balancer": "Debug",
+          "Tgs.GameRecord.Endorphina.Messages.ManualMessageHandler": "Information",
+          "Tgs.GameRecord.Endorphina.Messages.ScheduleMessageHandler": "Warning",
+          "Tgs.GameRecord.Endorphina.Messages.SessionProcessMessageHandler": "Information",
+          "Tgs.GameRecord.Endorphina.Messages.SessionQueuedMessageHandler": "Information",
+          "Tgs.GameRecord.Endorphina.Core.ApplicationServices.GamePullRecordCommandService": "Warning"
         }
       },
       "GameRecord": {
