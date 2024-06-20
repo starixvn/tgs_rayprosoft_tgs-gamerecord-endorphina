@@ -9,7 +9,8 @@ data:
       "Logging": {
         "LogLevel": {
           "Default": "Warning",
-          "Grpc.Net.Client.Balancer": "Debug",
+          "Grpc.Net.Client.Balancer": "Warning",
+          "Grpc.Net.Client.Balancer.DnsResolver": "Debug",
           "Tgs.GameRecord.Endorphina.Messages.ManualMessageHandler": "Information",
           "Tgs.GameRecord.Endorphina.Messages.ScheduleMessageHandler": "Warning",
           "Tgs.GameRecord.Endorphina.Messages.SessionProcessMessageHandler": "Information",
