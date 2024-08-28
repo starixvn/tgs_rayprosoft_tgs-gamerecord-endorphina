@@ -7,24 +7,21 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <None Remove="Protos\gamerecordendorphinaservicecore.proto" />
-	</ItemGroup>
-
-	<ItemGroup>
 		<PackageReference Include="Hangfire.AspNetCore" Version="1.8.14" />
 		<PackageReference Include="Hangfire.Dashboard.Management" Version="1.7.9" />
 		<PackageReference Include="HangFire.Redis.StackExchange" Version="1.9.3" />
 		<PackageReference Include="PhoenixToolkits.MessageQueue" Version="2.2.0" />
 		<PackageReference Include="PhoenixToolkits.MessageQueue.Nats" Version="2.2.0" />
+		<PackageReference Include="Polly" Version="8.4.1" />
 		<PackageReference Include="StackExchange.Redis" Version="2.8.0" />
 		<PackageReference Include="System.Linq.Async" Version="6.0.1" />
 		<PackageReference Include="Tgs.GameCommand.Client" Version="1.0.0" />
 		<PackageReference Include="Tgs.GameInterface.EndorphinaService.Client" Version="1.0.3" />
 		<PackageReference Include="Tgs.GameRecord.Endorphina.Session.Client" Version="1.0.0" />
-		<PackageReference Include="Tgs.GameRecord.Handle.Client" Version="1.0.6" />
+		<PackageReference Include="Tgs.GameRecord.Handle.Client" Version="1.0.7" />
 		<PackageReference Include="Tgs.MessageQueue.Nats.Serializers" Version="0.0.2" />
 		<PackageReference Include="TGS.ServiceUtility" Version="0.2.0" />
-		<PackageReference Include="Grpc.Tools" Version="2.65.0">
+		<PackageReference Include="Grpc.Tools" Version="2.66.0">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
@@ -32,7 +29,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Protobuf Include="Protos\gamerecordendorphinaservicecore.proto" />
+	  <ProjectReference Include="..\Tgs.GameRecord.Endorphina.Common\Tgs.GameRecord.Endorphina.Common.csproj" />
 	</ItemGroup>
 
 </Project>

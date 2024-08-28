@@ -1,6 +1,6 @@
-﻿using System.Text;
-using System.Text.Json;
+﻿using System.Text.Json;
 using Microsoft.Extensions.Logging;
+using Tgs.GameRecord.Endorphina.Common;
 using Tgs.ServiceUtility;
 using Valhalla.MessageQueue;
 
@@ -12,19 +12,31 @@ internal class JobExecuteCommandService(
 {
 	public ValueTask ExecuteAsync(JobExecuteCommand command, CancellationToken cancellationToken = default)
 	{
-		var parameters = new
+		var message = new EndorphinaGameRecordScheduleMessage
 		{
-			command.ApiUrl,
-			command.MerchantId,
-			command.SecretKey
+			ApiUrl = command.ApiUrl,
+			MerchantId = command.MerchantId,
+			SecretKey = command.SecretKey
 		};
 
-		logger.LogDebug("LogOn:{logOn} Parameters:{parameters}", DateTime.Now.ToString("u"), parameters);
+		logger.LogInformation("{logInformation}",
+			JsonSerializer.Serialize(new
+			{
+				LogOn = DateTime.Now.ToString("u"),
+				Subject = EndorphinaNatsConst.SchedulePublish,
+				Data = new
+				{
+					message.ApiUrl,
+					message.MerchantId,
+					message.SecretKey
+				},
+				Message = "This message publishing handler."
+			}));
 
 		return messageSender
 			.PublishAsync(
-			subject: "gp.gamerecord.schedule.endor",
-			data: Encoding.UTF8.GetBytes(JsonSerializer.Serialize(parameters)),
+			subject: EndorphinaNatsConst.SchedulePublish,
+			data: JsonSerializer.SerializeToUtf8Bytes(message),
 			cancellationToken: cancellationToken);
 	}
 }

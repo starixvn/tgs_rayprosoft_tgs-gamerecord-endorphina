@@ -1,30 +1,37 @@
-﻿using Tgs.GameRecord.Endorphina.Core.ApplicationServices;
-using Tgs.GameRecord.Endorphina.Core.Protos;
-using Tgs.ServiceUtility;
+﻿using System.Text.Json;
+using Tgs.GameRecord.Endorphina.Core;
+using Tgs.GameRecord.Endorphina.Core.ApplicationServices;
 using Valhalla.MessageQueue;
 
 namespace Tgs.GameRecord.Endorphina.Messages;
 
 internal class SessionQueuedMessageHandler(
-	ICommandService<ScheduleSessionQueuedCommand> service,
-	ILogger<SessionProcessMessageHandler> logger) : IMessageHandler<ReadOnlyMemory<byte>>
+	ILogger<SessionProcessMessageHandler> logger,
+	ISessionQueuedDispatcher dispatcher) : IMessageHandler<Common.Protos.SessionProcess>
 {
-	public ValueTask HandleAsync(string subject, ReadOnlyMemory<byte> data, IEnumerable<MessageHeaderValue>? headerValues, CancellationToken cancellationToken = default)
+	public ValueTask HandleAsync(string subject, Common.Protos.SessionProcess data, IEnumerable<MessageHeaderValue>? headerValues, CancellationToken cancellationToken = default)
 	{
-		var message = SessionProcess.Parser.ParseFrom(data.Span)
-			?? throw new ArgumentException("參數錯誤");
+		logger.LogInformation("{logInformation}",
+			JsonSerializer.Serialize(new
+			{
+				LogOn = DateTime.Now.ToString("u"),
+				Subject = subject,
+				Data = new
+				{
+					data.ApiUrl,
+					data.MerchantId,
+					data.SecretKey,
+					data.Token
+				},
+				Message = "This message receiving handler."
+			}));
 
-		logger.LogInformation("LogOn:{logOn} Subject:{subject} Information Request:{message}",
-			DateTime.Now.ToString("o"),
-			subject,
-			message);
-
-		var command = new ScheduleSessionQueuedCommand(
-			ApiUrl: new Uri(message.ApiUrl),
-			MerchantId: message.MerchantId,
-			SecretKey: message.SecretKey,
-			Token: message.Token);
-
-		return service.ExecuteAsync(command, cancellationToken);
+		return dispatcher.PushCommandAsync(
+			command: new SessionQueuedCommand(
+				ApiUrl: new Uri(data.ApiUrl),
+				MerchantId: data.MerchantId,
+				SecretKey: data.SecretKey,
+				Token: data.Token),
+			cancellationToken: cancellationToken);
 	}
 }
