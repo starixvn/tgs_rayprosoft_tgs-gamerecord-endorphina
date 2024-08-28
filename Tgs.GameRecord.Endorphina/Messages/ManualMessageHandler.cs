@@ -1,35 +1,43 @@
 ﻿using System.Text;
 using System.Text.Json;
+using Tgs.GameRecord.Endorphina.Common;
+using Tgs.GameRecord.Endorphina.Core;
 using Tgs.GameRecord.Endorphina.Core.ApplicationServices;
-using Tgs.ServiceUtility;
 using Valhalla.MessageQueue;
 
 namespace Tgs.GameRecord.Endorphina.Messages;
 
 internal class ManualMessageHandler(
 	ILogger<ManualMessageHandler> logger,
-	ICommandService<ManualSessionProcessCommand> service) : IMessageProcessor<ReadOnlyMemory<byte>, ReadOnlyMemory<byte>>
+	IManualPullRecordDispatcher dispatcher) : IMessageHandler<ReadOnlyMemory<byte>>
 {
-	public async ValueTask<ReadOnlyMemory<byte>> HandleAsync(string subject, ReadOnlyMemory<byte> data, IEnumerable<MessageHeaderValue>? headerValues, CancellationToken cancellationToken = default)
+	ValueTask IMessageHandler<ReadOnlyMemory<byte>>.HandleAsync(string subject, ReadOnlyMemory<byte> data, IEnumerable<MessageHeaderValue>? headerValues, CancellationToken cancellationToken)
 	{
 		var json = Encoding.UTF8.GetString(data.Span);
-		var message = JsonSerializer.Deserialize<ManualMessageModel>(json);
+		var message = JsonSerializer.Deserialize<EndorphinaGameRecordManualMessage>(json)
+			?? throw new NullReferenceException("The request data resolves to a null value");
 
-		if (message == null)
-		{
-			logger.LogError("Information Received:{LogInfo}", message);
-			return Encoding.UTF8.GetBytes(JsonSerializer.Serialize(new ManualMessageResponse(false)));
-		}
+		logger.LogInformation("{logInformation}",
+			JsonSerializer.Serialize(new
+			{
+				LogOn = DateTime.Now.ToString("u"),
+				Subject = subject,
+				Data = new
+				{
+					message.ApiUrl,
+					message.MerchantId,
+					message.SecretKey,
+					message.Token
+				},
+				Message = "This message receiving handler."
+			}));
 
-		logger.LogInformation("Information Received:{LogInfo}", message);
-
-		await service.ExecuteAsync(new ManualSessionProcessCommand(
-			ApiUrl: message.ApiUrl,
-			MerchantId: message.MerchantId,
-			SecretKey: message.SecretKey,
-			Token: message.Token), cancellationToken).ConfigureAwait(false);
-
-		var response = new ManualMessageResponse(true);
-		return Encoding.UTF8.GetBytes(JsonSerializer.Serialize(response));
+		return dispatcher.PushCommandAsync(
+			command: new ManualPullRecordCommand(
+				ApiUrl: message.ApiUrl,
+				MerchantId: message.MerchantId,
+				SecretKey: message.SecretKey,
+				Token: message.Token),
+			cancellationToken: cancellationToken);
 	}
 }

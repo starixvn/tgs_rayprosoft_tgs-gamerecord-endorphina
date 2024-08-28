@@ -8,6 +8,7 @@ using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using Tgs.GameRecord.Endorphina;
+using Tgs.GameRecord.Endorphina.Common;
 using Tgs.GameRecord.Endorphina.Core;
 using Tgs.GameRecord.Endorphina.Messages;
 using Tgs.MessageQueue.Nats.Serializers;
@@ -69,32 +70,45 @@ builder.Services.AddHangfire(
 	})
 	.AddHangfireServer();
 
-builder.Services.AddGameRecord(
-	(options, sp) =>
+builder.Services
+	.AddOptions<RedisOptions>()
+	.Configure((RedisOptions options, IServiceProvider sp) =>
 	{
 		var configuration = sp.GetRequiredService<IConfiguration>();
 		options.ConnectionString = configuration.GetConnectionString("Redis")!;
-	},
-	(options, sp) =>
+	})
+	.Services
+	.AddOptions<GameRecordInfoOptions>()
+	.Configure((GameRecordInfoOptions options, IServiceProvider sp) =>
 	{
 		var configuration = sp.GetRequiredService<IConfiguration>();
 		configuration.GetSection("GameRecordInfo").Bind(options);
-	},
-	(options, sp) =>
+	})
+	.Services
+	.AddSingleton<RedisConnectionManager>()
+	.AddSingleton(TimeProvider.System)
+	.AddGameCommandClient((options, sp) =>
 	{
 		var configuration = sp.GetRequiredService<IConfiguration>();
 		options.BaseUrl = configuration.GetValue<Uri>("GameRecord:GameCommandClientBaseUrl")!;
-	},
-	(options, sp) =>
+	})
+	.AddGameInterfaceEndorphinaServiceClient((options, sp) =>
 	{
 		var configuration = sp.GetRequiredService<IConfiguration>();
 		options.BaseUrl = configuration.GetValue<Uri>("GameRecord:GameInterfaceClientBaseUrl")!;
-	},
-	(options, sp) =>
+	})
+	.AddGameRecordEndorphinaSessionClient((options, sp) =>
 	{
 		var configuration = sp.GetRequiredService<IConfiguration>();
 		options.BaseUrl = configuration.GetValue<Uri>("GameRecord:GameRecordEndorphinaSessionBaseUrl")!;
-	});
+	})
+	.AddGameRecordHandleClient(httpClientBuilder => httpClientBuilder.ConfigureHttpClient((sp, http) =>
+	{
+		var config = sp.GetRequiredService<IConfiguration>();
+		http.BaseAddress = config.GetValue<Uri>("GameRecord:GameRecordHandleClientBaseUrl");
+	}))
+	.AddGameRecordCore()
+	.AddGameRecordRepository(redisDatabaseResolver: (sp) => sp.GetRequiredService<RedisConnectionManager>().Database);
 
 builder.Services
 	.AddKeyedSingleton("Nats", (sp, _) => new NatsConnection(NatsOpts.Default with
@@ -105,12 +119,15 @@ builder.Services
 	.AddMessageQueue()
 	.AddNatsMessageQueue(config => config
 		.ConfigureResolveConnection(sp => sp.GetRequiredKeyedService<NatsConnection>("Nats"))
-		.AddHandler<ScheduleMessageHandler>(subject: "gp.gamerecord.schedule.endor", group: "gp.gamerecord.schedule.endor")
-		.AddProcessor<ManualMessageHandler>(subject: "gp.gamerecord.manual.endor", queue: "gp.gamerecord.manual.endor")
-		.AddHandler<SessionQueuedMessageHandler>(subject: "gp.gamerecord.endor.session.queued", group: "gp.gamerecord.endor.session.queued")
-		.AddHandler<SessionProcessMessageHandler>(subject: "gp.gamerecord.endor.session.process", group: "gp.gamerecord.endor.session.process"))
+		.AddHandler<ScheduleMessageHandler>(subject: EndorphinaNatsConst.SchedulePublish, group: EndorphinaNatsConst.SchedulePublish)
+		.AddHandler<ManualMessageHandler>(subject: EndorphinaNatsConst.ManualPublish, group: EndorphinaNatsConst.ManualPublish)
+		.AddHandler<SessionQueuedMessageHandler>(subject: EndorphinaNatsConst.SessionQueuedPublish, group: EndorphinaNatsConst.SessionQueuedPublish)
+		.AddHandler<SessionProcessMessageHandler>(subject: EndorphinaNatsConst.SessionProcessPublish, group: EndorphinaNatsConst.SessionProcessPublish))
 	.ClearAllExchanges()
-	.AddNatsGlobPatternExchange("*");
+	.AddNatsGlobPatternExchange(EndorphinaNatsConst.SchedulePublish)
+	.AddNatsGlobPatternExchange(EndorphinaNatsConst.ManualPublish)
+	.AddNatsGlobPatternExchange(EndorphinaNatsConst.SessionQueuedPublish)
+	.AddNatsGlobPatternExchange(EndorphinaNatsConst.SessionProcessPublish);
 
 builder.Services
 	.AddOpenTelemetry()
@@ -154,10 +171,10 @@ app.UseHangfireDashboard(
 	"/hangfire",
 	new DashboardOptions()
 	{
-		Authorization = new[]
-		{
+		Authorization =
+		[
 			new IgnoreHangfireAuthorizationFilter()
-		}
+		]
 	});
 
 _ = app.UseAuthorization();
@@ -167,7 +184,5 @@ _ = app.MapControllers();
 app.MapHealthChecks("/healthz");
 
 _ = app.UseHangfireRegisterAsync();
-
-_ = app.UseRegisterAsync();
 
 app.Run();
