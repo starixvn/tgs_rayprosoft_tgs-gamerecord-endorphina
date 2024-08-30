@@ -1,4 +1,5 @@
 ﻿using System.Runtime.InteropServices;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using Hangfire;
 using Hangfire.Storage;
@@ -10,40 +11,46 @@ using Tgs.ServiceUtility;
 
 namespace Tgs.GameRecord.Endorphina.Core.JobApplicationServices;
 
-internal class JobInitCommandService : ICommandService<JobInitCommand>
+internal class JobInitCommandService(
+	ILogger<JobInitCommandService> logger,
+	IOptions<GameRecordInfoOptions> options,
+	IHangfireLockRepository hangfireLock,
+	IGameCommandClient client) : ICommandService<JobInitCommand>
 {
-	private readonly IGameCommandClient _client;
-	private readonly GameRecordInfoOptions _gameRecordInfo;
-	private readonly ILogger<JobInitCommandService> _logger;
-	private readonly RecurringJobOptions _recurringJobOptions;
+	private readonly GameRecordInfoOptions _gameRecordInfo = options.Value;
 
-	public JobInitCommandService(
-		ILogger<JobInitCommandService> logger,
-		IOptions<GameRecordInfoOptions> options,
-		IGameCommandClient client)
+	private readonly RecurringJobOptions _recurringJobOptions = new()
 	{
-		_logger = logger ?? throw new ArgumentNullException(nameof(logger));
-		_gameRecordInfo = options.Value;
-		_client = client ?? throw new ArgumentNullException(nameof(client));
-		_recurringJobOptions = new RecurringJobOptions()
-		{
-			TimeZone = TimeZoneInfo.FindSystemTimeZoneById(RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "China Standard Time" : "Asia/Shanghai")
-		};
-	}
+		TimeZone = TimeZoneInfo.FindSystemTimeZoneById(RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "China Standard Time" : "Asia/Shanghai")
+	};
 
 	public async ValueTask ExecuteAsync(JobInitCommand command, CancellationToken cancellationToken = default)
 	{
-		using (var connection = JobStorage.Current.GetConnection())
-		{
-			foreach (var recurringJob in connection.GetRecurringJobs())
-			{
-				RecurringJob.RemoveIfExists(recurringJob.Id);
-			}
-		}
-
 		try
 		{
-			var settingConfiguration = await _client
+			if (!await hangfireLock.LockingAsync(
+				application: typeof(JobInitCommandService).Name,
+				cancellationToken: cancellationToken)
+				.ConfigureAwait(false))
+			{
+				logger.LogWarning("{logWarning}",
+					JsonSerializer.Serialize(new
+					{
+						LogOn = DateTime.Now.ToString("u"),
+						Message = "This game provider configuration schedule has been initialized."
+					}));
+				return;
+			}
+
+			using (var connection = JobStorage.Current.GetConnection())
+			{
+				foreach (var recurringJob in connection.GetRecurringJobs())
+				{
+					RecurringJob.RemoveIfExists(recurringJob.Id);
+				}
+			}
+
+			var settingConfiguration = await client
 				.SettingGetConfigurationStringAsync(
 				key: _gameRecordInfo.GameProviderConfiguration,
 				cancellationToken: cancellationToken)
@@ -53,7 +60,7 @@ internal class JobInitCommandService : ICommandService<JobInitCommand>
 			var settingConfigurationJson = JsonNode.Parse(settingConfiguration)
 				?? throw new Exception($"This game product setting does not exist.({_gameRecordInfo.GameProviderConfiguration})");
 
-			var gameProviderConfigs = await _client
+			var gameProviderConfigs = await client
 				.GameProviderConfigurationQueryAsync(
 				gameProviderCode: _gameRecordInfo.GameProviderCode,
 				cancellationToken: cancellationToken)
@@ -114,7 +121,7 @@ internal class JobInitCommandService : ICommandService<JobInitCommand>
 		}
 		catch (Exception ex)
 		{
-			_logger.LogError(ex, "LogOn:{logOn} Message:遊戲廠商初始化排程發生例外", DateTime.Now.ToString("o"));
+			logger.LogError(ex, "LogOn:{logOn} Message:遊戲廠商初始化排程發生例外", DateTime.Now.ToString("o"));
 		}
 		finally
 		{
