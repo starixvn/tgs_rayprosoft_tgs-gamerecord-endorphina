@@ -1,5 +1,4 @@
 ﻿using Google.Protobuf.WellKnownTypes;
-using Grpc.Core;
 using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 using Tgs.GameInterface.EndorphinaService.Client;

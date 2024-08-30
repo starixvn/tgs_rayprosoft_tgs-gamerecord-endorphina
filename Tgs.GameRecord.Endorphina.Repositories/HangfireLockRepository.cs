@@ -9,6 +9,7 @@ using StackExchange.Redis;
 using Tgs.GameRecord.Endorphina.Core;
 
 namespace Tgs.GameRecord.Endorphina.Repositories;
+
 internal class HangfireLockRepository(
 	IOptions<GameRecordInfoOptions> options,
 	IDatabase database) : IHangfireLockRepository
